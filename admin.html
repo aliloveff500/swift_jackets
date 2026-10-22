@@ -41,8 +41,62 @@
           <i data-lucide="arrow-right" class="icon-sm"></i>
         </button>
       </form>
+
+      <!-- FORGOT / CHANGE PASSWORD DIRECTLY ON LOGIN GATE -->
+      <div class="gate-toggle-row">
+        <button type="button" class="gate-link-text-btn" id="openGateOtpBtn">
+          <i data-lucide="key" class="icon-xs"></i>
+          <span>Change Password / Reset via OTP</span>
+        </button>
+      </div>
+
+      <!-- GATE OTP RESET FLOW -->
+      <div id="gateOtpSection" class="gate-otp-section" style="display: none;">
+        <div class="gate-otp-banner">
+          <i data-lucide="shield-alert" class="icon-sm"></i>
+          <span>Admin Credential Reset</span>
+        </div>
+        <p class="gate-otp-desc">A 6-digit verification code will be dispatched to <strong>aliloveff500@gmail.com</strong>.</p>
+
+        <!-- STEP 1: SEND CODE -->
+        <div id="gateOtpStep1">
+          <button type="button" class="gate-btn" id="sendGateOtpBtn">
+            <i data-lucide="mail" class="icon-sm"></i>
+            <span>Send OTP Verification Code</span>
+          </button>
+        </div>
+
+        <!-- STEP 2: ENTER CODE & NEW CREDENTIALS -->
+        <div id="gateOtpStep2" style="display: none;">
+          <form id="gateOtpForm" onsubmit="return false;">
+            <div class="form-group">
+              <label for="gateOtpInput">Enter 6-Digit OTP Code *</label>
+              <input type="text" id="gateOtpInput" placeholder="Enter 6-digit code" maxlength="6" autocomplete="off" required>
+            </div>
+            <div class="form-group">
+              <label for="gateNewUsername">New Admin Username *</label>
+              <input type="text" id="gateNewUsername" placeholder="Enter username" autocomplete="off" required>
+            </div>
+            <div class="form-group">
+              <label for="gateNewPassword">New Admin Password *</label>
+              <input type="password" id="gateNewPassword" placeholder="Enter password" autocomplete="off" required>
+            </div>
+            <div id="gateOtpErrorMsg" class="login-error-text" style="display: none;">Invalid OTP verification code.</div>
+            <button type="submit" class="gate-btn" id="submitGateOtpBtn">
+              <i data-lucide="check" class="icon-sm"></i>
+              <span>Save & Sign In to Admin</span>
+            </button>
+          </form>
+        </div>
+
+        <button type="button" class="gate-link-back-btn" id="backToGateLoginBtn">
+          <i data-lucide="arrow-left" class="icon-xs"></i>
+          <span>Back to Regular Login</span>
+        </button>
+      </div>
+
       <div class="gate-footer">
-        <span>Default access on first run: username <code>admin</code> / password <code>admin123</code></span>
+        <span>Default access: Username <code>ALIZOX</code> / Password <code>ALIZOX 49229</code></span>
       </div>
     </div>
   </div>
@@ -166,7 +220,7 @@
                 <th>Jacket Model</th>
                 <th>Colorway & Theme</th>
                 <th>Condition</th>
-                <th>Price</th>
+                <th>Price (PKR)</th>
                 <th>Inventory Status</th>
                 <th>Sizes Available</th>
                 <th style="text-align: right;">Actions</th>
@@ -202,7 +256,7 @@
                 <th>Customer & Contact</th>
                 <th>Delivery Address</th>
                 <th>Item Purchased</th>
-                <th>Total Paid</th>
+                <th>Total Paid (PKR)</th>
                 <th>Status Controller</th>
                 <th style="text-align: right;">Delete</th>
               </tr>
@@ -366,12 +420,12 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label for="prodPrice">Discounted Price ($) *</label>
-                <input type="number" id="prodPrice" placeholder="159" required>
+                <label for="prodPrice">Discounted Price (PKR) *</label>
+                <input type="number" id="prodPrice" placeholder="14999" required>
               </div>
               <div class="form-group">
-                <label for="prodOriginalPrice">Original Price ($) *</label>
-                <input type="number" id="prodOriginalPrice" placeholder="219" required>
+                <label for="prodOriginalPrice">Original Price (PKR) *</label>
+                <input type="number" id="prodOriginalPrice" placeholder="19999" required>
               </div>
             </div>
 
@@ -425,12 +479,37 @@
           <!-- RIGHT COLUMN: COLORS, THEME GRADIENT, IMAGE & SIZES -->
           <div class="modal-col">
 
-            <!-- COLOR & DYNAMIC THEME SELECTOR -->
+            <!-- COLOR & DYNAMIC THEME SELECTOR WITH INTERACTIVE COLOR WHEEL -->
             <div class="form-group">
               <label>Select Jacket Color & Dynamic Background Theme *</label>
-              <p class="field-hint">Choose any color preset or pick a custom color. The website background theme dynamically transforms to match!</p>
+              <p class="field-hint">Touch or drag anywhere on the <strong>Color Wheel</strong> to pick any color. The storefront background dynamically transforms to match!</p>
               
-              <!-- COLOR PRESET BUTTONS (Includes Yellow, Green, Blue, Purple, and all classic colors) -->
+              <!-- INTERACTIVE CANVAS COLOR WHEEL -->
+              <div class="color-wheel-wrapper">
+                <div class="wheel-canvas-container">
+                  <canvas id="colorWheelCanvas" width="200" height="200"></canvas>
+                  <div class="wheel-selector-dot" id="wheelSelectorDot"></div>
+                </div>
+                <div class="wheel-sidebar-controls">
+                  <div class="wheel-brightness-row">
+                    <label for="wheelBrightness">Brightness:</label>
+                    <input type="range" id="wheelBrightness" min="20" max="100" value="95" class="wheel-slider">
+                  </div>
+                  <div class="wheel-picked-meta">
+                    <div class="wheel-preview-circle" id="wheelPreviewCircle" style="background: #ff6a2b;"></div>
+                    <div class="wheel-inputs-stack">
+                      <input type="text" id="prodColorName" placeholder="Color Name" value="Solar Ember" required>
+                      <div class="wheel-hex-box">
+                        <span class="hex-hash">#</span>
+                        <input type="text" id="prodHexValue" placeholder="ff6a2b" value="#ff6a2b" required>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- COLOR PRESET BUTTONS (Quick Selection Shortcuts) -->
+              <div class="palette-presets-label" style="font-size: 0.8rem; color: var(--admin-text-dim); margin-top: 0.6rem;">Quick Presets:</div>
               <div class="color-palette-presets" id="colorPalettePresets">
                 <button type="button" class="palette-swatch" data-hex="#ff6a2b" data-name="Solar Ember" style="background:#ff6a2b;" title="Solar Ember (Orange)"></button>
                 <button type="button" class="palette-swatch" data-hex="#2b2d35" data-name="Stealth Obsidian" style="background:#2b2d35; border: 1px solid #666;" title="Stealth Obsidian (Black)"></button>
@@ -441,17 +520,9 @@
                 <button type="button" class="palette-swatch" data-hex="#10b981" data-name="Emerald Forest" style="background:#10b981;" title="Emerald Forest (Green)"></button>
                 <button type="button" class="palette-swatch" data-hex="#9333ea" data-name="Cyber Violet" style="background:#9333ea;" title="Cyber Violet (Purple)"></button>
                 <button type="button" class="palette-swatch" data-hex="#ec4899" data-name="Rose Blush" style="background:#ec4899;" title="Rose Blush (Pink)"></button>
-                <button type="button" class="palette-swatch" data-hex="#0d9488" data-name="Midnight Teal" style="background:#0d9488;" title="Midnight Teal"></button>
-                <button type="button" class="palette-swatch" data-hex="#d97706" data-name="Champagne Gold" style="background:#d97706;" title="Champagne Gold"></button>
-              </div>
-
-              <!-- CUSTOM COLOR PICKER -->
-              <div class="custom-color-row">
-                <input type="color" id="prodCustomColorPicker" value="#ff6a2b">
-                <div class="custom-color-inputs">
-                  <input type="text" id="prodColorName" placeholder="Color Name (e.g. Electric Volt)" value="Solar Ember" required>
-                  <input type="text" id="prodHexValue" placeholder="#HEX" value="#ff6a2b" required>
-                </div>
+                <button type="button" class="palette-swatch" data-hex="#06b6d4" data-name="Neon Cyan" style="background:#06b6d4;" title="Neon Cyan"></button>
+                <button type="button" class="palette-swatch" data-hex="#84cc16" data-name="Lime Acid" style="background:#84cc16;" title="Lime Acid"></button>
+                <button type="button" class="palette-swatch" data-hex="#f59e0b" data-name="Amber Sunset" style="background:#f59e0b;" title="Amber Sunset"></button>
               </div>
             </div>
 

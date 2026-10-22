@@ -174,6 +174,198 @@ html, body {
   border-radius: 4px;
 }
 
+/* GATE DIRECT OTP RESET STYLES */
+.gate-toggle-row {
+  text-align: center;
+  margin: 0.8rem 0;
+}
+
+.gate-link-text-btn {
+  background: none;
+  border: none;
+  color: var(--admin-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: underline;
+  transition: var(--transition-smooth);
+}
+
+.gate-link-text-btn:hover {
+  color: #fff;
+}
+
+.gate-otp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 1.2rem;
+  margin-top: 0.5rem;
+}
+
+.gate-otp-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #f59e0b;
+}
+
+.gate-otp-desc {
+  font-size: 0.82rem;
+  color: var(--admin-text-muted);
+  line-height: 1.45;
+}
+
+.gate-link-back-btn {
+  background: none;
+  border: none;
+  color: var(--admin-text-dim);
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  transition: var(--transition-smooth);
+}
+
+.gate-link-back-btn:hover {
+  color: #fff;
+}
+
+/* COLOR WHEEL STYLES */
+.color-wheel-wrapper {
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-top: 0.4rem;
+}
+
+.wheel-canvas-container {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  cursor: crosshair;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  background: #000;
+}
+
+#colorWheelCanvas {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  display: block;
+  touch-action: none;
+}
+
+.wheel-selector-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 5px rgba(0,0,0,0.8), inset 0 0 3px rgba(0,0,0,0.8);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: transform 0.05s ease;
+}
+
+.wheel-sidebar-controls {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.wheel-brightness-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.wheel-brightness-row label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--admin-text-muted);
+}
+
+.wheel-slider {
+  width: 100%;
+  accent-color: var(--admin-primary);
+  cursor: pointer;
+}
+
+.wheel-picked-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.wheel-preview-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.wheel-inputs-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.wheel-inputs-stack input {
+  font-size: 0.82rem;
+  padding: 0.5rem 0.7rem;
+}
+
+.wheel-hex-box {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 0 0.5rem;
+}
+
+.hex-hash {
+  color: var(--admin-text-dim);
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.wheel-hex-box input {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0.4rem 0.3rem;
+  font-family: monospace;
+  font-weight: 700;
+  color: #fff;
+  width: 100%;
+}
+
 /* ===================================================================
    MAIN ADMIN CONSOLE
 =================================================================== */

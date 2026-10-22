@@ -20,8 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
       hex: '#ff6a2b',
       gradient: 'radial-gradient(circle at 62% 48%, #ff6b2b 0%, #a23807 38%, #140702 92%)',
       themeGlow: 'rgba(255, 106, 43, 0.45)',
-      price: 149,
-      originalPrice: 199,
+      price: 14999,
+      originalPrice: 19999,
       discount: 'Save 25%',
       condition: 'Brand New',
       stockAvailable: 18,
@@ -43,8 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
       hex: '#2b2d35',
       gradient: 'radial-gradient(circle at 62% 48%, #3e424c 0%, #1c1e25 42%, #08090c 92%)',
       themeGlow: 'rgba(160, 174, 192, 0.35)',
-      price: 189,
-      originalPrice: 249,
+      price: 18999,
+      originalPrice: 24999,
       discount: 'Save 24%',
       condition: 'Brand New',
       stockAvailable: 24,
@@ -66,8 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
       hex: '#cfdbe6',
       gradient: 'radial-gradient(circle at 62% 48%, #cfdbe6 0%, #76899b 42%, #141d24 92%)',
       themeGlow: 'rgba(186, 215, 233, 0.45)',
-      price: 169,
-      originalPrice: 229,
+      price: 16999,
+      originalPrice: 22999,
       discount: 'Save 26%',
       condition: 'Brand New',
       stockAvailable: 12,
@@ -89,8 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
       hex: '#e11d48',
       gradient: 'radial-gradient(circle at 62% 48%, #e11d48 0%, #7a091e 40%, #140206 92%)',
       themeGlow: 'rgba(244, 63, 94, 0.45)',
-      price: 159,
-      originalPrice: 209,
+      price: 15999,
+      originalPrice: 20999,
       discount: 'Save 24%',
       condition: 'Brand New',
       stockAvailable: 9,
@@ -106,6 +106,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   ];
 
+  // Price formatting in PKR
+  function formatPKR(val) {
+    const num = parseInt(val) || 0;
+    return `PKR ${num.toLocaleString('en-PK')}`;
+  }
+
   // Load products from LocalStorage (or seed)
   function getLiveProducts() {
     let stored = localStorage.getItem('swift_jackets_products');
@@ -115,7 +121,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     try {
       const parsed = JSON.parse(stored);
-      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_PRODUCTS;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        parsed.forEach(p => {
+          if (p.price < 1000) p.price = p.price * 100;
+          if (p.originalPrice < 1000) p.originalPrice = p.originalPrice * 100;
+        });
+        localStorage.setItem('swift_jackets_products', JSON.stringify(parsed));
+        return parsed;
+      }
+      return DEFAULT_PRODUCTS;
     } catch (e) {
       return DEFAULT_PRODUCTS;
     }
@@ -223,24 +237,59 @@ document.addEventListener('DOMContentLoaded', () => {
   const productsCatalogGrid = document.getElementById('productsCatalogGrid');
 
   // 4. APPLY DYNAMIC CUSTOM COLOR & BACKGROUND THEME
+  function calculateThemeFromHex(hex) {
+    let c = (hex || '#ff6a2b').replace('#', '').trim();
+    if (c.length === 3) c = c.split('').map(x => x + x).join('');
+    if (c.length !== 6) c = 'ff6a2b';
+    const r = parseInt(c.substring(0, 2), 16) || 255;
+    const g = parseInt(c.substring(2, 4), 16) || 106;
+    const b = parseInt(c.substring(4, 6), 16) || 43;
+
+    const midR = Math.round(r * 0.42);
+    const midG = Math.round(g * 0.42);
+    const midB = Math.round(b * 0.42);
+
+    const baseR = Math.round(r * 0.07);
+    const baseG = Math.round(g * 0.07);
+    const baseB = Math.round(b * 0.07);
+
+    const gradient = `radial-gradient(circle at 62% 48%, rgb(${r}, ${g}, ${b}) 0%, rgb(${midR}, ${midG}, ${midB}) 42%, rgb(${baseR}, ${baseG}, ${baseB}) 92%)`;
+    const glow = `rgba(${r}, ${g}, ${b}, 0.55)`;
+
+    return { hex: `#${c}`, gradient, glow, rgb: `${r}, ${g}, ${b}` };
+  }
+
+  // 4. APPLY DYNAMIC CUSTOM COLOR & BACKGROUND THEME
   function applyProductTheme(prod) {
-    // If standard theme class exists
     if (prod.themeClass) {
       body.className = prod.themeClass;
     } else {
       body.className = '';
     }
 
-    // Set custom CSS properties dynamically so ANY color from admin panel works immediately!
-    const hex = prod.hex || '#ff6a2b';
-    const gradient = prod.gradient || `radial-gradient(circle at 62% 48%, ${hex} 0%, rgba(10, 10, 14, 0.95) 75%, #070709 95%)`;
-    const glow = prod.themeGlow || `${hex}66`;
+    const calc = calculateThemeFromHex(prod.hex);
+    const gradient = prod.gradient || calc.gradient;
+    const glow = prod.themeGlow || calc.glow;
+    const hex = prod.hex || calc.hex;
 
     document.documentElement.style.setProperty('--theme-primary', hex);
     document.documentElement.style.setProperty('--theme-glow', glow);
     document.documentElement.style.setProperty('--theme-bg-gradient', gradient);
 
-    // Update active swatch name
+    // Apply directly to dynamic background canvas elements
+    const bgLayer = document.querySelector('.bg-gradient-layer.current');
+    if (bgLayer) {
+      bgLayer.style.background = gradient;
+    }
+    const ambientGlow = document.querySelector('.bg-ambient-glow');
+    if (ambientGlow) {
+      ambientGlow.style.background = `radial-gradient(circle, ${glow} 0%, transparent 68%)`;
+    }
+    const ambientRing = document.querySelector('.ambient-ring');
+    if (ambientRing) {
+      ambientRing.style.boxShadow = `0 0 60px ${glow}, inset 0 0 40px ${glow}`;
+    }
+
     if (swatchActiveName) swatchActiveName.textContent = prod.colorName;
   }
 
@@ -250,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
     products.forEach((p, idx) => {
       const btn = document.createElement('button');
       btn.className = `color-dot-btn ${idx === currentIndex ? 'active' : ''}`;
-      btn.title = `${p.colorName} ($${p.price})`;
+      btn.title = `${p.colorName} (${formatPKR(p.price)})`;
       btn.setAttribute('aria-label', p.colorName);
 
       const borderStyle = p.hex === '#2b2d35' || p.hex === '#000000' ? 'border: 1px solid rgba(255,255,255,0.4);' : '';
@@ -453,8 +502,8 @@ document.addEventListener('DOMContentLoaded', () => {
     heroTagline.innerHTML = `<span class="quote-line"></span><p>${prod.tagline || 'Confidence, wrapped in warmth'}</p><span class="quote-line"></span>`;
     jacketColorName.textContent = prod.colorName;
     discountBadge.textContent = prod.discount || 'Save 25%';
-    currentPrice.textContent = `$${prod.price}`;
-    originalPrice.textContent = `$${prod.originalPrice}`;
+    currentPrice.textContent = formatPKR(prod.price);
+    originalPrice.textContent = formatPKR(prod.originalPrice);
 
     // Update Condition & Stock
     if (heroConditionBadge) {
@@ -478,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
     previewThumbImg.src = upcomingProd.image;
     previewColorTitle.textContent = upcomingProd.colorName;
     if (previewPriceTitle) {
-      previewPriceTitle.textContent = `$${upcomingProd.price}`;
+      previewPriceTitle.textContent = formatPKR(upcomingProd.price);
     }
   }
 
@@ -657,7 +706,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateCartCalculations() {
     const p = products[currentIndex];
     const total = p.price * cartQuantity;
-    if (summaryTotal) summaryTotal.textContent = `$${total}.00`;
+    if (summaryTotal) summaryTotal.textContent = formatPKR(total);
+    if (cartItemPrice) cartItemPrice.textContent = formatPKR(p.price);
   }
 
   qtyPlus.addEventListener('click', () => {
@@ -798,7 +848,7 @@ document.addEventListener('DOMContentLoaded', () => {
     placedOrderImg.src = currentProd.image;
     placedOrderTitle.textContent = currentProd.name;
     placedOrderDetails.textContent = `Color: ${currentProd.colorName} | Size: ${selectedSize} | Qty: ${cartQuantity}`;
-    placedOrderPrice.textContent = `$${totalPrice}.00`;
+    placedOrderPrice.textContent = formatPKR(totalPrice);
 
     // Trigger cross-tab sync
     window.dispatchEvent(new Event('storage'));
@@ -851,8 +901,8 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="catalog-card-color" style="color: ${p.hex};">${p.colorName}</span>
           <h3 class="catalog-card-name">${p.name}</h3>
           <div class="catalog-card-price-row">
-            <span class="catalog-card-price">$${p.price}</span>
-            <span class="catalog-card-orig">$${p.originalPrice}</span>
+            <span class="catalog-card-price">${formatPKR(p.price)}</span>
+            <span class="catalog-card-orig">${formatPKR(p.originalPrice)}</span>
           </div>
         </div>
         <div class="catalog-card-actions">
