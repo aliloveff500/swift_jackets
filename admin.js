@@ -10,7 +10,9 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  // =================================================================
   // 1. DEFAULT DATASETS (Seeded safely so stats never show 0)
+  // =================================================================
   const DEFAULT_PRODUCTS = [
     {
       id: 'swift-orange',
@@ -291,28 +293,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // State
-  let products = getSafeProducts();
-  let orders = getSafeOrders();
-  let customers = getSafeCustomers();
-  let brandSettings = getSafeBrand();
-  let adminAuth = getSafeAuth();
-  let activeOtpCode = null;
-  let gateActiveOtp = null;
-
-  // Real-time Cross-Tab Broadcast Channel
-  const syncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('swift_jackets_sync') : null;
-
-  function broadcastChange(type, data = {}) {
-    window.dispatchEvent(new Event('storage'));
-    if (syncChannel) {
-      try {
-        syncChannel.postMessage({ type, data, timestamp: Date.now() });
-      } catch (err) {}
-    }
-  }
-
-  // 2. AUTHENTICATION CONTROLLER
+  // =================================================================
+  // 2. DOM ELEMENTS (Declared first to eliminate any ReferenceErrors)
+  // =================================================================
   const authGate = document.getElementById('authGate');
   const adminWrapper = document.getElementById('adminWrapper');
   const adminLoginForm = document.getElementById('adminLoginForm');
@@ -321,89 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginErrorMsg = document.getElementById('loginErrorMsg');
   const adminLogoutBtn = document.getElementById('adminLogoutBtn');
 
-  // Check Persistent or Session Login
-  if (localStorage.getItem('swift_admin_logged_in') === 'true' || sessionStorage.getItem('swift_admin_logged_in') === 'true') {
-    showAdminDashboard();
-  } else {
-    showAuthGate();
-  }
-
-  function showAdminDashboard() {
-    if (authGate) authGate.style.display = 'none';
-    if (adminWrapper) adminWrapper.style.display = 'flex';
-    products = getSafeProducts();
-    orders = getSafeOrders();
-    customers = getSafeCustomers();
-    brandSettings = getSafeBrand();
-
-    renderProductsTable();
-    renderOrdersTable();
-    renderCustomersTable();
-    populateBrandForm();
-    updateBadges();
-    refreshIcons();
-  }
-
-  function showAuthGate() {
-    if (authGate) authGate.style.display = 'flex';
-    if (adminWrapper) adminWrapper.style.display = 'none';
-    if (adminUsernameInput) adminUsernameInput.value = '';
-    if (adminPasswordInput) adminPasswordInput.value = '';
-    if (loginErrorMsg) loginErrorMsg.style.display = 'none';
-    refreshIcons();
-  }
-
-  if (adminLoginForm) {
-    adminLoginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const u = adminUsernameInput.value.trim();
-      const p = adminPasswordInput.value.trim();
-
-      adminAuth = getSafeAuth();
-      if (u === adminAuth.username && p === adminAuth.password) {
-        sessionStorage.setItem('swift_admin_logged_in', 'true');
-        localStorage.setItem('swift_admin_logged_in', 'true');
-        showAdminDashboard();
-        broadcastChange('ADMIN_AUTH');
-      } else {
-        if (loginErrorMsg) {
-          loginErrorMsg.style.display = 'block';
-          if (window.gsap) gsap.fromTo(loginErrorMsg, { x: -8 }, { x: 8, duration: 0.1, repeat: 3, yoyo: true });
-        }
-      }
-    });
-  }
-
-  if (adminLogoutBtn) {
-    adminLogoutBtn.addEventListener('click', () => {
-      sessionStorage.removeItem('swift_admin_logged_in');
-      localStorage.removeItem('swift_admin_logged_in');
-      showAuthGate();
-      broadcastChange('ADMIN_LOGOUT');
-    });
-  }
-
-  // Emergency Reset Defaults Button
-  const resetCatalogDefaultsBtn = document.getElementById('resetCatalogDefaultsBtn');
-  if (resetCatalogDefaultsBtn) {
-    resetCatalogDefaultsBtn.addEventListener('click', () => {
-      if (confirm('Restore factory jacket models and default stats?')) {
-        localStorage.setItem('swift_jackets_products', JSON.stringify(DEFAULT_PRODUCTS));
-        localStorage.setItem('swift_jackets_orders', JSON.stringify(DEFAULT_ORDERS));
-        localStorage.setItem('swift_jackets_customers', JSON.stringify(DEFAULT_CUSTOMERS));
-        localStorage.setItem('swift_admin_auth', JSON.stringify(DEFAULT_AUTH));
-        localStorage.setItem('swift_brand_settings', JSON.stringify(DEFAULT_BRAND));
-        products = DEFAULT_PRODUCTS;
-        orders = DEFAULT_ORDERS;
-        customers = DEFAULT_CUSTOMERS;
-        showAdminDashboard();
-        broadcastChange('ALL_RESET');
-        alert('Storefront and admin restored to factory defaults!');
-      }
-    });
-  }
-
-  // GATE DIRECT OTP CREDENTIAL RESET
+  // Gate OTP
   const openGateOtpBtn = document.getElementById('openGateOtpBtn');
   const gateOtpSection = document.getElementById('gateOtpSection');
   const backToGateLoginBtn = document.getElementById('backToGateLoginBtn');
@@ -416,185 +317,114 @@ document.addEventListener('DOMContentLoaded', () => {
   const gateNewPassword = document.getElementById('gateNewPassword');
   const gateOtpErrorMsg = document.getElementById('gateOtpErrorMsg');
 
-  if (openGateOtpBtn) {
-    openGateOtpBtn.addEventListener('click', () => {
-      adminLoginForm.style.display = 'none';
-      openGateOtpBtn.parentElement.style.display = 'none';
-      gateOtpSection.style.display = 'flex';
-      gateOtpStep1.style.display = 'block';
-      gateOtpStep2.style.display = 'none';
-      refreshIcons();
-    });
-  }
-
-  if (backToGateLoginBtn) {
-    backToGateLoginBtn.addEventListener('click', () => {
-      gateOtpSection.style.display = 'none';
-      adminLoginForm.style.display = 'block';
-      openGateOtpBtn.parentElement.style.display = 'block';
-      gateActiveOtp = null;
-    });
-  }
-
-  if (sendGateOtpBtn) {
-    sendGateOtpBtn.addEventListener('click', () => {
-      gateActiveOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      gateOtpStep1.style.display = 'none';
-      gateOtpStep2.style.display = 'block';
-      alert(`A 6-digit verification code has been dispatched to aliloveff500@gmail.com.\n\nYour Verification Code is: ${gateActiveOtp}`);
-    });
-  }
-
-  if (gateOtpForm) {
-    gateOtpForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const entered = gateOtpInput.value.trim();
-      const newUser = gateNewUsername.value.trim();
-      const newPass = gateNewPassword.value.trim();
-
-      if (entered !== gateActiveOtp) {
-        gateOtpErrorMsg.style.display = 'block';
-        return;
-      }
-
-      if (!newUser || !newPass) {
-        alert('Please enter both username and password.');
-        return;
-      }
-
-      adminAuth.username = newUser;
-      adminAuth.password = newPass;
-      localStorage.setItem('swift_admin_auth', JSON.stringify(adminAuth));
-      sessionStorage.setItem('swift_admin_logged_in', 'true');
-      localStorage.setItem('swift_admin_logged_in', 'true');
-
-      alert(`Admin credentials updated successfully! Welcome, ${newUser}!`);
-      showAdminDashboard();
-      broadcastChange('ADMIN_AUTH');
-    });
-  }
-
-  // 3. TAB NAVIGATION
+  // Tabs & Badges
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.admin-tab-content');
+  const ordersBadge = document.getElementById('ordersCountBadge');
+  const custBadge = document.getElementById('customersCountBadge');
+  const statActive = document.getElementById('statActiveModels');
+  const statStock = document.getElementById('statTotalStock');
+  const statSold = document.getElementById('statTotalSold');
+  const resetCatalogDefaultsBtn = document.getElementById('resetCatalogDefaultsBtn');
 
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const targetTab = btn.getAttribute('data-tab');
-      tabBtns.forEach(b => b.classList.remove('active'));
-      tabContents.forEach(c => c.classList.remove('active'));
-
-      btn.classList.add('active');
-      const targetContent = document.getElementById(targetTab);
-      if (targetContent) targetContent.classList.add('active');
-
-      if (targetTab === 'tab-products') renderProductsTable();
-      if (targetTab === 'tab-orders') renderOrdersTable();
-      if (targetTab === 'tab-customers') renderCustomersTable();
-      if (targetTab === 'tab-branding') populateBrandForm();
-      refreshIcons();
-    });
-  });
-
-  function updateBadges() {
-    const ordersBadge = document.getElementById('ordersCountBadge');
-    const custBadge = document.getElementById('customersCountBadge');
-    const statActive = document.getElementById('statActiveModels');
-    const statStock = document.getElementById('statTotalStock');
-    const statSold = document.getElementById('statTotalSold');
-
-    if (ordersBadge) ordersBadge.textContent = orders.length;
-    if (custBadge) custBadge.textContent = customers.length;
-    if (statActive) statActive.textContent = products.length;
-
-    const totalStock = products.reduce((acc, curr) => acc + (parseInt(curr.stockAvailable) || 0), 0);
-    const totalSold = products.reduce((acc, curr) => acc + (parseInt(curr.itemsSold) || 0), 0);
-
-    if (statStock) statStock.textContent = totalStock;
-    if (statSold) statSold.textContent = totalSold;
-  }
-
-  // 4. PRODUCTS MANAGEMENT & TABLE
+  // Tables
   const productsTableBody = document.getElementById('productsTableBody');
+  const ordersTableBody = document.getElementById('ordersTableBody');
+  const noOrdersNotice = document.getElementById('noOrdersNotice');
+  const refreshOrdersBtn = document.getElementById('refreshOrdersBtn');
+  const customersTableBody = document.getElementById('customersTableBody');
+  const noCustomersNotice = document.getElementById('noCustomersNotice');
+  const refreshCustomersBtn = document.getElementById('refreshCustomersBtn');
 
-  function renderProductsTable() {
-    products = getSafeProducts();
-    if (!productsTableBody) return;
-    productsTableBody.innerHTML = '';
+  // Brand Form
+  const brandNameInput = document.getElementById('brandNameInput');
+  const brandSuffixInput = document.getElementById('brandSuffixInput');
+  const brandTaglineInput = document.getElementById('brandTaglineInput');
+  const supportAgentInput = document.getElementById('supportAgentInput');
+  const supportPhoneInput = document.getElementById('supportPhoneInput');
+  const brandSettingsForm = document.getElementById('brandSettingsForm');
 
-    products.forEach((p) => {
-      const tr = document.createElement('tr');
-      const allSizes = ['36', '38', '40', '42'];
-      const sizeHtml = allSizes.map(s => {
-        const hasSize = (p.availableSizes || []).includes(s);
-        return `<span class="size-mini-tag ${hasSize ? '' : 'disabled'}" title="${hasSize ? 'Available' : 'Out of Stock'}">${s}</span>`;
-      }).join(' ');
+  // Product Add / Edit Modal
+  const productModal = document.getElementById('productModal');
+  const openAddProductModal = document.getElementById('openAddProductModal');
+  const closeProductModal = document.getElementById('closeProductModal');
+  const cancelProductBtn = document.getElementById('cancelProductBtn');
+  const productForm = document.getElementById('productForm');
+  const productModalTitle = document.getElementById('productModalTitle');
 
-      const conditionClass = (p.condition || '').includes('Used') ? 'condition-used' : '';
+  const editProductId = document.getElementById('editProductId');
+  const prodName = document.getElementById('prodName');
+  const prodPrice = document.getElementById('prodPrice');
+  const prodOriginalPrice = document.getElementById('prodOriginalPrice');
+  const prodCondition = document.getElementById('prodCondition');
+  const prodStock = document.getElementById('prodStock');
+  const prodSold = document.getElementById('prodSold');
+  const prodTag = document.getElementById('prodTag');
+  const prodHeadline = document.getElementById('prodHeadline');
+  const prodHeadlineLight = document.getElementById('prodHeadlineLight');
+  const prodTagline = document.getElementById('prodTagline');
+  const prodDesc = document.getElementById('prodDesc');
+  const prodColorName = document.getElementById('prodColorName');
+  const prodHexValue = document.getElementById('prodHexValue');
+  const themePreviewBox = document.getElementById('themePreviewBox');
+  const previewGlowSphere = document.getElementById('previewGlowSphere');
+  const modalImgPreview = document.getElementById('modalImgPreview');
+  const prodImagePath = document.getElementById('prodImagePath');
+  const prodImageFileInput = document.getElementById('prodImageFileInput');
 
-      tr.innerHTML = `
-        <td>
-          <div class="table-product-cell">
-            <img src="${p.image}" alt="${p.name}" class="table-thumb">
-            <div>
-              <div class="table-prod-name">${p.name}</div>
-              <div class="table-prod-desc">${p.tagline || p.description}</div>
-            </div>
-          </div>
-        </td>
-        <td>
-          <div class="color-badge">
-            <span class="color-dot-indicator" style="background: ${p.hex};"></span>
-            <span>${p.colorName}</span>
-          </div>
-        </td>
-        <td>
-          <span class="condition-pill ${conditionClass}">${p.condition || 'Brand New'}</span>
-        </td>
-        <td>
-          <span class="price-text">${formatPKR(p.price)}</span>
-          <span class="orig-price-text">${formatPKR(p.originalPrice)}</span>
-        </td>
-        <td>
-          <div class="stock-meter">
-            <span class="stock-count">${p.stockAvailable || 0} in stock</span>
-            <span class="sold-count">${p.itemsSold || 0} sold</span>
-          </div>
-        </td>
-        <td>
-          <div class="sizes-badge-row">
-            ${sizeHtml}
-          </div>
-        </td>
-        <td>
-          <div class="action-btns-group">
-            <button class="btn-icon-action edit-btn" data-id="${p.id}" title="Edit Jacket">
-              <i data-lucide="edit-3" class="icon-xs"></i>
-            </button>
-            <button class="btn-icon-action delete delete-btn" data-id="${p.id}" title="Remove Jacket">
-              <i data-lucide="trash-2" class="icon-xs"></i>
-            </button>
-          </div>
-        </td>
-      `;
+  const sizeCheckboxes = {
+    '36': document.getElementById('size36'),
+    '38': document.getElementById('size38'),
+    '40': document.getElementById('size40'),
+    '42': document.getElementById('size42')
+  };
 
-      tr.querySelector('.edit-btn').addEventListener('click', () => openEditProduct(p.id));
-      tr.querySelector('.delete-btn').addEventListener('click', () => deleteProduct(p.id));
-
-      productsTableBody.appendChild(tr);
-    });
-
-    updateBadges();
-    refreshIcons();
-  }
-
-  // 5. COLOR WHEEL ENGINE
+  // Color Wheel
   const wheelCanvas = document.getElementById('colorWheelCanvas');
   const wheelSelectorDot = document.getElementById('wheelSelectorDot');
   const wheelBrightness = document.getElementById('wheelBrightness');
   const wheelPreviewCircle = document.getElementById('wheelPreviewCircle');
   const paletteSwatches = document.querySelectorAll('.palette-swatch');
 
+  // Security Credentials Reset Tab
+  const secStep1 = document.getElementById('secStep1');
+  const secStep2 = document.getElementById('secStep2');
+  const secStep3 = document.getElementById('secStep3');
+  const sendOtpBtn = document.getElementById('sendOtpBtn');
+  const updateCredentialsForm = document.getElementById('updateCredentialsForm');
+  const inputOtpCode = document.getElementById('inputOtpCode');
+  const newAdminUsername = document.getElementById('newAdminUsername');
+  const newAdminPassword = document.getElementById('newAdminPassword');
+  const otpErrorMsg = document.getElementById('otpErrorMsg');
+  const cancelOtpBtn = document.getElementById('cancelOtpBtn');
+  const doneSecBtn = document.getElementById('doneSecBtn');
+
+  // =================================================================
+  // 3. STATE & CROSS-TAB SYNC
+  // =================================================================
+  let products = getSafeProducts();
+  let orders = getSafeOrders();
+  let customers = getSafeCustomers();
+  let brandSettings = getSafeBrand();
+  let adminAuth = getSafeAuth();
+  let activeOtpCode = null;
+  let gateActiveOtp = null;
+  let isWheelDragging = false;
+
+  const syncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('swift_jackets_sync') : null;
+
+  function broadcastChange(type, data = {}) {
+    window.dispatchEvent(new Event('storage'));
+    if (syncChannel) {
+      try {
+        syncChannel.postMessage({ type, data, timestamp: Date.now() });
+      } catch (err) {}
+    }
+  }
+
+  // =================================================================
+  // 4. COLOR WHEEL & GRADIENT GENERATOR
+  // =================================================================
   function hsvToRgb(h, s, v) {
     let r, g, b;
     const i = Math.floor(h * 6);
@@ -689,8 +519,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.putImageData(imgData, 0, 0);
   }
 
-  let isWheelDragging = false;
-
   function handleWheelInteraction(e) {
     if (!wheelCanvas) return;
     const rect = wheelCanvas.getBoundingClientRect();
@@ -768,41 +596,411 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 6. PRODUCT MODAL (ADD / EDIT)
-  const productModal = document.getElementById('productModal');
-  const openAddProductModal = document.getElementById('openAddProductModal');
-  const closeProductModal = document.getElementById('closeProductModal');
-  const cancelProductBtn = document.getElementById('cancelProductBtn');
-  const productForm = document.getElementById('productForm');
-  const productModalTitle = document.getElementById('productModalTitle');
+  // =================================================================
+  // 5. DATA RENDERING FUNCTIONS
+  // =================================================================
+  function updateBadges() {
+    products = getSafeProducts();
+    orders = getSafeOrders();
+    customers = getSafeCustomers();
 
-  const editProductId = document.getElementById('editProductId');
-  const prodName = document.getElementById('prodName');
-  const prodPrice = document.getElementById('prodPrice');
-  const prodOriginalPrice = document.getElementById('prodOriginalPrice');
-  const prodCondition = document.getElementById('prodCondition');
-  const prodStock = document.getElementById('prodStock');
-  const prodSold = document.getElementById('prodSold');
-  const prodTag = document.getElementById('prodTag');
-  const prodHeadline = document.getElementById('prodHeadline');
-  const prodHeadlineLight = document.getElementById('prodHeadlineLight');
-  const prodTagline = document.getElementById('prodTagline');
-  const prodDesc = document.getElementById('prodDesc');
-  const prodColorName = document.getElementById('prodColorName');
-  const prodHexValue = document.getElementById('prodHexValue');
-  const themePreviewBox = document.getElementById('themePreviewBox');
-  const previewGlowSphere = document.getElementById('previewGlowSphere');
-  const modalImgPreview = document.getElementById('modalImgPreview');
-  const prodImagePath = document.getElementById('prodImagePath');
-  const prodImageFileInput = document.getElementById('prodImageFileInput');
+    if (ordersBadge) ordersBadge.textContent = orders.length;
+    if (custBadge) custBadge.textContent = customers.length;
+    if (statActive) statActive.textContent = products.length;
 
-  const sizeCheckboxes = {
-    '36': document.getElementById('size36'),
-    '38': document.getElementById('size38'),
-    '40': document.getElementById('size40'),
-    '42': document.getElementById('size42')
-  };
+    const totalStock = products.reduce((acc, curr) => acc + (parseInt(curr.stockAvailable) || 0), 0);
+    const totalSold = products.reduce((acc, curr) => acc + (parseInt(curr.itemsSold) || 0), 0);
 
+    if (statStock) statStock.textContent = totalStock;
+    if (statSold) statSold.textContent = totalSold;
+  }
+
+  function renderProductsTable() {
+    products = getSafeProducts();
+    if (!productsTableBody) return;
+    productsTableBody.innerHTML = '';
+
+    products.forEach((p) => {
+      const tr = document.createElement('tr');
+      const allSizes = ['36', '38', '40', '42'];
+      const sizeHtml = allSizes.map(s => {
+        const hasSize = (p.availableSizes || []).includes(s);
+        return `<span class="size-mini-tag ${hasSize ? '' : 'disabled'}" title="${hasSize ? 'Available' : 'Out of Stock'}">${s}</span>`;
+      }).join(' ');
+
+      const conditionClass = (p.condition || '').includes('Used') ? 'condition-used' : '';
+
+      tr.innerHTML = `
+        <td>
+          <div class="table-product-cell">
+            <img src="${p.image}" alt="${p.name}" class="table-thumb">
+            <div>
+              <div class="table-prod-name">${p.name}</div>
+              <div class="table-prod-desc">${p.tagline || p.description}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="color-badge">
+            <span class="color-dot-indicator" style="background: ${p.hex};"></span>
+            <span>${p.colorName}</span>
+          </div>
+        </td>
+        <td>
+          <span class="condition-pill ${conditionClass}">${p.condition || 'Brand New'}</span>
+        </td>
+        <td>
+          <span class="price-text">${formatPKR(p.price)}</span>
+          <span class="orig-price-text">${formatPKR(p.originalPrice)}</span>
+        </td>
+        <td>
+          <div class="stock-meter">
+            <span class="stock-count">${p.stockAvailable || 0} in stock</span>
+            <span class="sold-count">${p.itemsSold || 0} sold</span>
+          </div>
+        </td>
+        <td>
+          <div class="sizes-badge-row">
+            ${sizeHtml}
+          </div>
+        </td>
+        <td>
+          <div class="action-btns-group">
+            <button class="btn-icon-action edit-btn" data-id="${p.id}" title="Edit Jacket">
+              <i data-lucide="edit-3" class="icon-xs"></i>
+            </button>
+            <button class="btn-icon-action delete delete-btn" data-id="${p.id}" title="Remove Jacket">
+              <i data-lucide="trash-2" class="icon-xs"></i>
+            </button>
+          </div>
+        </td>
+      `;
+
+      tr.querySelector('.edit-btn').addEventListener('click', () => openEditProduct(p.id));
+      tr.querySelector('.delete-btn').addEventListener('click', () => deleteProduct(p.id));
+
+      productsTableBody.appendChild(tr);
+    });
+
+    updateBadges();
+    refreshIcons();
+  }
+
+  function renderOrdersTable() {
+    orders = getSafeOrders();
+    if (!ordersTableBody) return;
+    ordersTableBody.innerHTML = '';
+
+    if (orders.length === 0) {
+      if (noOrdersNotice) noOrdersNotice.style.display = 'flex';
+      return;
+    } else {
+      if (noOrdersNotice) noOrdersNotice.style.display = 'none';
+    }
+
+    orders.forEach((ord, index) => {
+      const tr = document.createElement('tr');
+      const dateFormatted = new Date(ord.date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      tr.innerHTML = `
+        <td>
+          <div style="font-weight: 800; font-family: var(--font-display); color: #fff;">${ord.orderId}</div>
+          <div style="font-size: 0.75rem; color: var(--admin-text-dim);">${dateFormatted}</div>
+        </td>
+        <td>
+          <div style="font-weight: 700;">${ord.customer?.name || 'Customer'}</div>
+          <div style="font-size: 0.78rem; color: var(--admin-text-muted);">${ord.customer?.phone || ''}</div>
+          <div style="font-size: 0.75rem; color: var(--admin-text-dim);">${ord.customer?.email || ''}</div>
+        </td>
+        <td>
+          <div style="font-size: 0.85rem; max-width: 200px; color: var(--admin-text-muted);">${ord.customer?.fullAddress || ord.customer?.street || 'N/A'}</div>
+          <div style="font-size: 0.75rem; color: #38bdf8; font-weight: 600;">${ord.customer?.city || ''}</div>
+        </td>
+        <td>
+          <div class="table-product-cell">
+            <img src="${ord.item?.image || 'assets/images/jacket_orange.png'}" class="table-thumb" style="width: 40px; height: 40px;">
+            <div>
+              <div style="font-weight: 700; font-size: 0.88rem;">${ord.item?.name || 'Swift Jacket'}</div>
+              <div style="font-size: 0.75rem; color: var(--admin-text-muted);">Size: ${ord.item?.size || '38'} | Color: ${ord.item?.color || 'N/A'} | Qty: ${ord.item?.quantity || 1}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div style="font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; color: #34d399;">${formatPKR(ord.total || ord.item?.price)}</div>
+        </td>
+        <td>
+          <div class="status-select-wrap">
+            <select class="status-dropdown" data-index="${index}">
+              <option value="Pending" ${ord.status === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+              <option value="Processing" ${ord.status === 'Processing' ? 'selected' : ''}>🔄 Processing</option>
+              <option value="Shipped" ${ord.status === 'Shipped' ? 'selected' : ''}>🚚 Shipped</option>
+              <option value="Delivered" ${ord.status === 'Delivered' ? 'selected' : ''}>✅ Delivered</option>
+              <option value="Cancelled" ${ord.status === 'Cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+            </select>
+          </div>
+        </td>
+        <td style="text-align: right;">
+          <button class="btn-icon-action delete delete-order-btn" data-index="${index}" title="Delete Order">
+            <i data-lucide="trash-2" class="icon-xs"></i>
+          </button>
+        </td>
+      `;
+
+      tr.querySelector('.status-dropdown').addEventListener('change', (e) => {
+        const newStatus = e.target.value;
+        orders[index].status = newStatus;
+        localStorage.setItem('swift_jackets_orders', JSON.stringify(orders));
+        broadcastChange('ORDER_STATUS_CHANGED', { orderId: ord.orderId, status: newStatus });
+      });
+
+      tr.querySelector('.delete-order-btn').addEventListener('click', () => {
+        if (confirm(`Delete order ${ord.orderId}?`)) {
+          orders.splice(index, 1);
+          localStorage.setItem('swift_jackets_orders', JSON.stringify(orders));
+          renderOrdersTable();
+          updateBadges();
+          broadcastChange('ORDERS_UPDATED');
+        }
+      });
+
+      ordersTableBody.appendChild(tr);
+    });
+
+    updateBadges();
+    refreshIcons();
+  }
+
+  function renderCustomersTable() {
+    customers = getSafeCustomers();
+    if (!customersTableBody) return;
+    customersTableBody.innerHTML = '';
+
+    if (customers.length === 0) {
+      if (noCustomersNotice) noCustomersNotice.style.display = 'flex';
+      return;
+    } else {
+      if (noCustomersNotice) noCustomersNotice.style.display = 'none';
+    }
+
+    customers.forEach(cust => {
+      const tr = document.createElement('tr');
+      const dateFormatted = cust.registeredAt ? new Date(cust.registeredAt).toLocaleDateString() : 'Active User';
+
+      tr.innerHTML = `
+        <td>
+          <div style="font-weight: 700; color: #fff;">${cust.name || 'Anonymous User'}</div>
+        </td>
+        <td>
+          <div style="color: var(--admin-text-muted);">${cust.email || 'N/A'}</div>
+        </td>
+        <td>
+          <div style="color: var(--admin-text-dim);">${cust.phone || 'N/A'}</div>
+        </td>
+        <td>
+          <span style="color: #38bdf8; font-weight: 600;">${cust.city || 'Store Visitor'}</span>
+        </td>
+        <td>
+          <div style="font-size: 0.82rem; color: var(--admin-text-dim);">${dateFormatted}</div>
+        </td>
+        <td>
+          <span class="condition-pill" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">
+            ${cust.ordersCount || 1} Orders
+          </span>
+        </td>
+      `;
+      customersTableBody.appendChild(tr);
+    });
+
+    updateBadges();
+    refreshIcons();
+  }
+
+  function populateBrandForm() {
+    brandSettings = getSafeBrand();
+    if (brandNameInput) brandNameInput.value = brandSettings.brandName || 'SWIFT';
+    if (brandSuffixInput) brandSuffixInput.value = brandSettings.brandSuffix || 'JACKETS';
+    if (brandTaglineInput) brandTaglineInput.value = brandSettings.tagline || 'Confidence, wrapped in warmth';
+    if (supportAgentInput) supportAgentInput.value = brandSettings.supportAgent || 'ALIZOX';
+    if (supportPhoneInput) supportPhoneInput.value = brandSettings.supportPhone || '03079436896';
+    const rad = document.querySelector(`input[name="logoChoice"][value="${brandSettings.logoChoice || 'thunderbolt'}"]`);
+    if (rad) rad.checked = true;
+  }
+
+  // =================================================================
+  // 6. EVENT LISTENERS SETUP
+  // =================================================================
+
+  // Auth gate login
+  if (adminLoginForm) {
+    adminLoginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const u = adminUsernameInput.value.trim();
+      const p = adminPasswordInput.value.trim();
+
+      adminAuth = getSafeAuth();
+      if (u === adminAuth.username && p === adminAuth.password) {
+        sessionStorage.setItem('swift_admin_logged_in', 'true');
+        localStorage.setItem('swift_admin_logged_in', 'true');
+        showAdminDashboard();
+        broadcastChange('ADMIN_AUTH');
+      } else {
+        if (loginErrorMsg) {
+          loginErrorMsg.style.display = 'block';
+          if (window.gsap) gsap.fromTo(loginErrorMsg, { x: -8 }, { x: 8, duration: 0.1, repeat: 3, yoyo: true });
+        }
+      }
+    });
+  }
+
+  if (adminLogoutBtn) {
+    adminLogoutBtn.addEventListener('click', () => {
+      sessionStorage.removeItem('swift_admin_logged_in');
+      localStorage.removeItem('swift_admin_logged_in');
+      showAuthGate();
+      broadcastChange('ADMIN_LOGOUT');
+    });
+  }
+
+  // Emergency Reset Defaults Button
+  if (resetCatalogDefaultsBtn) {
+    resetCatalogDefaultsBtn.addEventListener('click', () => {
+      if (confirm('Restore factory jacket models and default stats?')) {
+        localStorage.setItem('swift_jackets_products', JSON.stringify(DEFAULT_PRODUCTS));
+        localStorage.setItem('swift_jackets_orders', JSON.stringify(DEFAULT_ORDERS));
+        localStorage.setItem('swift_jackets_customers', JSON.stringify(DEFAULT_CUSTOMERS));
+        localStorage.setItem('swift_admin_auth', JSON.stringify(DEFAULT_AUTH));
+        localStorage.setItem('swift_brand_settings', JSON.stringify(DEFAULT_BRAND));
+        products = DEFAULT_PRODUCTS;
+        orders = DEFAULT_ORDERS;
+        customers = DEFAULT_CUSTOMERS;
+        showAdminDashboard();
+        broadcastChange('ALL_RESET');
+        alert('Storefront and admin restored to factory defaults!');
+      }
+    });
+  }
+
+  // Gate OTP
+  if (openGateOtpBtn) {
+    openGateOtpBtn.addEventListener('click', () => {
+      adminLoginForm.style.display = 'none';
+      openGateOtpBtn.parentElement.style.display = 'none';
+      gateOtpSection.style.display = 'flex';
+      gateOtpStep1.style.display = 'block';
+      gateOtpStep2.style.display = 'none';
+      refreshIcons();
+    });
+  }
+
+  if (backToGateLoginBtn) {
+    backToGateLoginBtn.addEventListener('click', () => {
+      gateOtpSection.style.display = 'none';
+      adminLoginForm.style.display = 'block';
+      openGateOtpBtn.parentElement.style.display = 'block';
+      gateActiveOtp = null;
+    });
+  }
+
+  if (sendGateOtpBtn) {
+    sendGateOtpBtn.addEventListener('click', () => {
+      gateActiveOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      gateOtpStep1.style.display = 'none';
+      gateOtpStep2.style.display = 'block';
+      alert(`A 6-digit verification code has been dispatched to aliloveff500@gmail.com.\n\nYour Verification Code is: ${gateActiveOtp}`);
+    });
+  }
+
+  if (gateOtpForm) {
+    gateOtpForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const entered = gateOtpInput.value.trim();
+      const newUser = gateNewUsername.value.trim();
+      const newPass = gateNewPassword.value.trim();
+
+      if (entered !== gateActiveOtp) {
+        gateOtpErrorMsg.style.display = 'block';
+        return;
+      }
+
+      if (!newUser || !newPass) {
+        alert('Please enter both username and password.');
+        return;
+      }
+
+      adminAuth.username = newUser;
+      adminAuth.password = newPass;
+      localStorage.setItem('swift_admin_auth', JSON.stringify(adminAuth));
+      sessionStorage.setItem('swift_admin_logged_in', 'true');
+      localStorage.setItem('swift_admin_logged_in', 'true');
+
+      alert(`Admin credentials updated successfully! Welcome, ${newUser}!`);
+      showAdminDashboard();
+      broadcastChange('ADMIN_AUTH');
+    });
+  }
+
+  // Tab navigation
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetTab = btn.getAttribute('data-tab');
+      tabBtns.forEach(b => b.classList.remove('active'));
+      tabContents.forEach(c => c.classList.remove('active'));
+
+      btn.classList.add('active');
+      const targetContent = document.getElementById(targetTab);
+      if (targetContent) targetContent.classList.add('active');
+
+      if (targetTab === 'tab-products') renderProductsTable();
+      if (targetTab === 'tab-orders') renderOrdersTable();
+      if (targetTab === 'tab-customers') renderCustomersTable();
+      if (targetTab === 'tab-branding') populateBrandForm();
+      refreshIcons();
+    });
+  });
+
+  // Table Refresh buttons
+  if (refreshOrdersBtn) {
+    refreshOrdersBtn.addEventListener('click', () => {
+      orders = getSafeOrders();
+      renderOrdersTable();
+      updateBadges();
+    });
+  }
+
+  if (refreshCustomersBtn) {
+    refreshCustomersBtn.addEventListener('click', () => {
+      customers = getSafeCustomers();
+      renderCustomersTable();
+      updateBadges();
+    });
+  }
+
+  // Branding Form submit
+  if (brandSettingsForm) {
+    brandSettingsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const choice = document.querySelector('input[name="logoChoice"]:checked');
+      brandSettings = {
+        ...brandSettings,
+        brandName: brandNameInput.value.trim() || 'SWIFT',
+        brandSuffix: brandSuffixInput.value.trim() || 'JACKETS',
+        tagline: brandTaglineInput.value.trim() || 'Confidence, wrapped in warmth',
+        supportAgent: supportAgentInput.value.trim() || 'ALIZOX',
+        supportPhone: supportPhoneInput.value.trim() || '03079436896',
+        logoChoice: choice ? choice.value : 'thunderbolt'
+      };
+      localStorage.setItem('swift_brand_settings', JSON.stringify(brandSettings));
+      broadcastChange('BRAND_UPDATED', brandSettings);
+      alert('Brand settings updated and synchronized to storefront!');
+    });
+  }
+
+  // Product Add / Edit Modal interactions
   if (prodHexValue) {
     prodHexValue.addEventListener('input', (e) => {
       let hex = e.target.value.trim();
@@ -952,217 +1150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 7. ORDERS MANAGEMENT & STATUS UPDATES
-  const ordersTableBody = document.getElementById('ordersTableBody');
-  const noOrdersNotice = document.getElementById('noOrdersNotice');
-  const refreshOrdersBtn = document.getElementById('refreshOrdersBtn');
-
-  function renderOrdersTable() {
-    orders = getSafeOrders();
-    if (!ordersTableBody) return;
-    ordersTableBody.innerHTML = '';
-
-    if (orders.length === 0) {
-      if (noOrdersNotice) noOrdersNotice.style.display = 'flex';
-      return;
-    } else {
-      if (noOrdersNotice) noOrdersNotice.style.display = 'none';
-    }
-
-    orders.forEach((ord, index) => {
-      const tr = document.createElement('tr');
-      const dateFormatted = new Date(ord.date).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-
-      tr.innerHTML = `
-        <td>
-          <div style="font-weight: 800; font-family: var(--font-display); color: #fff;">${ord.orderId}</div>
-          <div style="font-size: 0.75rem; color: var(--admin-text-dim);">${dateFormatted}</div>
-        </td>
-        <td>
-          <div style="font-weight: 700;">${ord.customer?.name || 'Customer'}</div>
-          <div style="font-size: 0.78rem; color: var(--admin-text-muted);">${ord.customer?.phone || ''}</div>
-          <div style="font-size: 0.75rem; color: var(--admin-text-dim);">${ord.customer?.email || ''}</div>
-        </td>
-        <td>
-          <div style="font-size: 0.85rem; max-width: 200px; color: var(--admin-text-muted);">${ord.customer?.fullAddress || ord.customer?.street || 'N/A'}</div>
-          <div style="font-size: 0.75rem; color: #38bdf8; font-weight: 600;">${ord.customer?.city || ''}</div>
-        </td>
-        <td>
-          <div class="table-product-cell">
-            <img src="${ord.item?.image || 'assets/images/jacket_orange.png'}" class="table-thumb" style="width: 40px; height: 40px;">
-            <div>
-              <div style="font-weight: 700; font-size: 0.88rem;">${ord.item?.name || 'Swift Jacket'}</div>
-              <div style="font-size: 0.75rem; color: var(--admin-text-muted);">Size: ${ord.item?.size || '38'} | Color: ${ord.item?.color || 'N/A'} | Qty: ${ord.item?.quantity || 1}</div>
-            </div>
-          </div>
-        </td>
-        <td>
-          <div style="font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; color: #34d399;">${formatPKR(ord.total || ord.item?.price)}</div>
-        </td>
-        <td>
-          <div class="status-select-wrap">
-            <select class="status-dropdown" data-index="${index}">
-              <option value="Pending" ${ord.status === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
-              <option value="Processing" ${ord.status === 'Processing' ? 'selected' : ''}>🔄 Processing</option>
-              <option value="Shipped" ${ord.status === 'Shipped' ? 'selected' : ''}>🚚 Shipped</option>
-              <option value="Delivered" ${ord.status === 'Delivered' ? 'selected' : ''}>✅ Delivered</option>
-              <option value="Cancelled" ${ord.status === 'Cancelled' ? 'selected' : ''}>❌ Cancelled</option>
-            </select>
-          </div>
-        </td>
-        <td style="text-align: right;">
-          <button class="btn-icon-action delete delete-order-btn" data-index="${index}" title="Delete Order">
-            <i data-lucide="trash-2" class="icon-xs"></i>
-          </button>
-        </td>
-      `;
-
-      tr.querySelector('.status-dropdown').addEventListener('change', (e) => {
-        const newStatus = e.target.value;
-        orders[index].status = newStatus;
-        localStorage.setItem('swift_jackets_orders', JSON.stringify(orders));
-        broadcastChange('ORDER_STATUS_CHANGED', { orderId: ord.orderId, status: newStatus });
-      });
-
-      tr.querySelector('.delete-order-btn').addEventListener('click', () => {
-        if (confirm(`Delete order ${ord.orderId}?`)) {
-          orders.splice(index, 1);
-          localStorage.setItem('swift_jackets_orders', JSON.stringify(orders));
-          renderOrdersTable();
-          updateBadges();
-          broadcastChange('ORDERS_UPDATED');
-        }
-      });
-
-      ordersTableBody.appendChild(tr);
-    });
-
-    updateBadges();
-    refreshIcons();
-  }
-
-  if (refreshOrdersBtn) {
-    refreshOrdersBtn.addEventListener('click', () => {
-      orders = getSafeOrders();
-      renderOrdersTable();
-      updateBadges();
-    });
-  }
-
-  // 8. CUSTOMERS MANAGEMENT
-  const customersTableBody = document.getElementById('customersTableBody');
-  const noCustomersNotice = document.getElementById('noCustomersNotice');
-  const refreshCustomersBtn = document.getElementById('refreshCustomersBtn');
-
-  function renderCustomersTable() {
-    customers = getSafeCustomers();
-    if (!customersTableBody) return;
-    customersTableBody.innerHTML = '';
-
-    if (customers.length === 0) {
-      if (noCustomersNotice) noCustomersNotice.style.display = 'flex';
-      return;
-    } else {
-      if (noCustomersNotice) noCustomersNotice.style.display = 'none';
-    }
-
-    customers.forEach(cust => {
-      const tr = document.createElement('tr');
-      const dateFormatted = cust.registeredAt ? new Date(cust.registeredAt).toLocaleDateString() : 'Active User';
-
-      tr.innerHTML = `
-        <td>
-          <div style="font-weight: 700; color: #fff;">${cust.name || 'Anonymous User'}</div>
-        </td>
-        <td>
-          <div style="color: var(--admin-text-muted);">${cust.email || 'N/A'}</div>
-        </td>
-        <td>
-          <div style="color: var(--admin-text-dim);">${cust.phone || 'N/A'}</div>
-        </td>
-        <td>
-          <span style="color: #38bdf8; font-weight: 600;">${cust.city || 'Store Visitor'}</span>
-        </td>
-        <td>
-          <div style="font-size: 0.82rem; color: var(--admin-text-dim);">${dateFormatted}</div>
-        </td>
-        <td>
-          <span class="condition-pill" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">
-            ${cust.ordersCount || 1} Orders
-          </span>
-        </td>
-      `;
-      customersTableBody.appendChild(tr);
-    });
-
-    updateBadges();
-    refreshIcons();
-  }
-
-  if (refreshCustomersBtn) {
-    refreshCustomersBtn.addEventListener('click', () => {
-      customers = getSafeCustomers();
-      renderCustomersTable();
-      updateBadges();
-    });
-  }
-
-  // 9. BRANDING SETTINGS
-  const brandNameInput = document.getElementById('brandNameInput');
-  const brandSuffixInput = document.getElementById('brandSuffixInput');
-  const brandTaglineInput = document.getElementById('brandTaglineInput');
-  const supportAgentInput = document.getElementById('supportAgentInput');
-  const supportPhoneInput = document.getElementById('supportPhoneInput');
-  const brandSettingsForm = document.getElementById('brandSettingsForm');
-
-  function populateBrandForm() {
-    brandSettings = getSafeBrand();
-    if (brandNameInput) brandNameInput.value = brandSettings.brandName || 'SWIFT';
-    if (brandSuffixInput) brandSuffixInput.value = brandSettings.brandSuffix || 'JACKETS';
-    if (brandTaglineInput) brandTaglineInput.value = brandSettings.tagline || 'Confidence, wrapped in warmth';
-    if (supportAgentInput) supportAgentInput.value = brandSettings.supportAgent || 'ALIZOX';
-    if (supportPhoneInput) supportPhoneInput.value = brandSettings.supportPhone || '03079436896';
-    const rad = document.querySelector(`input[name="logoChoice"][value="${brandSettings.logoChoice || 'thunderbolt'}"]`);
-    if (rad) rad.checked = true;
-  }
-
-  if (brandSettingsForm) {
-    brandSettingsForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const choice = document.querySelector('input[name="logoChoice"]:checked');
-      brandSettings = {
-        ...brandSettings,
-        brandName: brandNameInput.value.trim() || 'SWIFT',
-        brandSuffix: brandSuffixInput.value.trim() || 'JACKETS',
-        tagline: brandTaglineInput.value.trim() || 'Confidence, wrapped in warmth',
-        supportAgent: supportAgentInput.value.trim() || 'ALIZOX',
-        supportPhone: supportPhoneInput.value.trim() || '03079436896',
-        logoChoice: choice ? choice.value : 'thunderbolt'
-      };
-      localStorage.setItem('swift_brand_settings', JSON.stringify(brandSettings));
-      broadcastChange('BRAND_UPDATED', brandSettings);
-      alert('Brand settings updated and synchronized to storefront!');
-    });
-  }
-
-  // 10. SECURITY CREDENTIALS RESET (OTP FLOW)
-  const secStep1 = document.getElementById('secStep1');
-  const secStep2 = document.getElementById('secStep2');
-  const secStep3 = document.getElementById('secStep3');
-  const sendOtpBtn = document.getElementById('sendOtpBtn');
-  const updateCredentialsForm = document.getElementById('updateCredentialsForm');
-  const inputOtpCode = document.getElementById('inputOtpCode');
-  const newAdminUsername = document.getElementById('newAdminUsername');
-  const newAdminPassword = document.getElementById('newAdminPassword');
-  const otpErrorMsg = document.getElementById('otpErrorMsg');
-  const cancelOtpBtn = document.getElementById('cancelOtpBtn');
-  const doneSecBtn = document.getElementById('doneSecBtn');
-
+  // Security Credentials Reset Form
   if (sendOtpBtn) {
     sendOtpBtn.addEventListener('click', () => {
       activeOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -1221,13 +1209,49 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Listen to cross-tab storage changes
+  // =================================================================
+  // 7. INITIAL BOOT & DISPLAY FUNCTIONS (Called at bottom)
+  // =================================================================
+  function showAdminDashboard() {
+    if (authGate) authGate.style.display = 'none';
+    if (adminWrapper) adminWrapper.style.display = 'flex';
+    products = getSafeProducts();
+    orders = getSafeOrders();
+    customers = getSafeCustomers();
+    brandSettings = getSafeBrand();
+
+    renderProductsTable();
+    renderOrdersTable();
+    renderCustomersTable();
+    populateBrandForm();
+    updateBadges();
+    refreshIcons();
+  }
+
+  function showAuthGate() {
+    if (authGate) authGate.style.display = 'flex';
+    if (adminWrapper) adminWrapper.style.display = 'none';
+    if (adminUsernameInput) adminUsernameInput.value = '';
+    if (adminPasswordInput) adminPasswordInput.value = '';
+    if (loginErrorMsg) loginErrorMsg.style.display = 'none';
+    refreshIcons();
+  }
+
+  // Check login state
+  try {
+    if (localStorage.getItem('swift_admin_logged_in') === 'true' || sessionStorage.getItem('swift_admin_logged_in') === 'true') {
+      showAdminDashboard();
+    } else {
+      showAuthGate();
+    }
+  } catch (err) {
+    console.error('Fatal boot error in admin:', err);
+    showAdminDashboard();
+  }
+
+  // Cross-tab storage listener
   if (syncChannel) {
     syncChannel.onmessage = () => {
-      products = getSafeProducts();
-      orders = getSafeOrders();
-      customers = getSafeCustomers();
-      brandSettings = getSafeBrand();
       renderProductsTable();
       renderOrdersTable();
       renderCustomersTable();
@@ -1236,10 +1260,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.addEventListener('storage', () => {
-    products = getSafeProducts();
-    orders = getSafeOrders();
-    customers = getSafeCustomers();
-    brandSettings = getSafeBrand();
     renderProductsTable();
     renderOrdersTable();
     renderCustomersTable();
