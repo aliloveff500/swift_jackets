@@ -1,86 +1,127 @@
 /* ===================================================================
-   SWIFT JACKETS — INTERACTIVE APPLICATION SCRIPT (UPDATED)
-   - Distinct Pricing for Every Jacket
-   - Bottom-Right Thumbnail to Center Hero Cinematic Transition
-   - Full 3D Drag-to-Rotate Interactive Preview
-   - All Products Catalog Modal
-   - Visible Colorway Swatches with Active Highlights
-   - Flying Cart Animation & In-Drawer Order Placement & Tracking
+   SWIFT JACKETS — INTERACTIVE APPLICATION SCRIPT (ENHANCED)
+   - Real-time Synchronization with Admin Portal
+   - Dynamic Custom Color & 3D Background Theme Generation
+   - Product Condition & Stock Meters
+   - Dynamic Size Availability Toggles
+   - Email Notification on Order Placement (aliloveff500@gmail.com)
+   - Customer Registry Synchronization
 =================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // 1. PRODUCTS DATASET (DISTINCT PRICING & SPECS FOR EACH JACKET)
-  const products = [
+  // 1. DEFAULT DATASET (Seeded if localStorage empty)
+  const DEFAULT_PRODUCTS = [
     {
       id: 'swift-orange',
       name: 'Swift ThermoPuff Apex',
       colorName: 'Solar Ember',
       themeClass: 'theme-orange',
+      hex: '#ff6a2b',
+      gradient: 'radial-gradient(circle at 62% 48%, #ff6b2b 0%, #a23807 38%, #140702 92%)',
+      themeGlow: 'rgba(255, 106, 43, 0.45)',
       price: 149,
       originalPrice: 199,
       discount: 'Save 25%',
+      condition: 'Brand New',
+      stockAvailable: 18,
+      itemsSold: 42,
+      availableSizes: ['36', '38', '40', '42'],
       tag: 'WINTER 2026 EDITION',
       headline: 'Stand out',
       headlineLight: 'Without trying',
       tagline: 'Confidence, wrapped in warmth',
       description: "It's not just about staying warm, it's about stepping outside and instantly feeling confident, comfortable, and completely yourself. Designed to elevate even the simplest outfit, this jacket wraps you in lightweight warmth.",
       tech: 'Aerogel 850+ Fill',
-      image: 'assets/images/jacket_orange.png',
-      hex: '#ff6a2b'
+      image: 'assets/images/jacket_orange.png'
     },
     {
       id: 'swift-black',
       name: 'Swift AeroShadow Ghost',
       colorName: 'Stealth Obsidian',
       themeClass: 'theme-black',
+      hex: '#2b2d35',
+      gradient: 'radial-gradient(circle at 62% 48%, #3e424c 0%, #1c1e25 42%, #08090c 92%)',
+      themeGlow: 'rgba(160, 174, 192, 0.35)',
       price: 189,
       originalPrice: 249,
       discount: 'Save 24%',
+      condition: 'Brand New',
+      stockAvailable: 24,
+      itemsSold: 65,
+      availableSizes: ['36', '38', '40', '42'],
       tag: 'STEALTH LABS EDITION',
       headline: 'Quiet power,',
       headlineLight: 'Unmatched warmth',
       tagline: 'Precision cut, engineered for stealth',
       description: "Matte obsidian finish with stormproof seam sealing and ergonomic baffle architecture. A subtle silhouette engineered to deflect freezing gusts while locking in natural body warmth.",
       tech: 'GORE Windstopper & 850 Down',
-      image: 'assets/images/jacket_black.png',
-      hex: '#2b2d35'
+      image: 'assets/images/jacket_black.png'
     },
     {
       id: 'swift-white',
       name: 'Swift Arctic Frost Luxe',
       colorName: 'Glacier Pearl',
       themeClass: 'theme-white',
+      hex: '#cfdbe6',
+      gradient: 'radial-gradient(circle at 62% 48%, #cfdbe6 0%, #76899b 42%, #141d24 92%)',
+      themeGlow: 'rgba(186, 215, 233, 0.45)',
       price: 169,
       originalPrice: 229,
       discount: 'Save 26%',
+      condition: 'Brand New',
+      stockAvailable: 12,
+      itemsSold: 31,
+      availableSizes: ['36', '38', '40'],
       tag: 'ALPINE GLACIER CAPSULE',
       headline: 'Pure elegance,',
       headlineLight: 'Effortless warmth',
       tagline: 'Luminous comfort in sub-zero calm',
       description: "High-sheen pearl finish reflecting winter radiance. Ultra-compressible 850 fill-power responsibly sourced down for cloud-like thermal comfort that transitions seamlessly from chalet to street.",
       tech: 'Hydrophobic Pearl Ripstop',
-      image: 'assets/images/jacket_white.png',
-      hex: '#cfdbe6'
+      image: 'assets/images/jacket_white.png'
     },
     {
       id: 'swift-red',
       name: 'Swift Velvet Blaze',
       colorName: 'Crimson Ruby',
       themeClass: 'theme-red',
+      hex: '#e11d48',
+      gradient: 'radial-gradient(circle at 62% 48%, #e11d48 0%, #7a091e 40%, #140206 92%)',
+      themeGlow: 'rgba(244, 63, 94, 0.45)',
       price: 159,
       originalPrice: 209,
       discount: 'Save 24%',
+      condition: 'Brand New',
+      stockAvailable: 9,
+      itemsSold: 28,
+      availableSizes: ['38', '40', '42'],
       tag: 'HIGH ROLLER LIMITED',
       headline: 'Bold presence,',
       headlineLight: 'Timeless comfort',
       tagline: 'Command attention in every room',
       description: "Vibrant high-contrast crimson with satin luster. Windproof micro-weave that stands out across city skylines while trapping vital core heat during rapid temperature drops.",
       tech: 'Thermal Core Micro-Weave',
-      image: 'assets/images/jacket_red.png',
-      hex: '#e11d48'
+      image: 'assets/images/jacket_red.png'
     }
   ];
+
+  // Load products from LocalStorage (or seed)
+  function getLiveProducts() {
+    let stored = localStorage.getItem('swift_jackets_products');
+    if (!stored) {
+      localStorage.setItem('swift_jackets_products', JSON.stringify(DEFAULT_PRODUCTS));
+      return DEFAULT_PRODUCTS;
+    }
+    try {
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_PRODUCTS;
+    } catch (e) {
+      return DEFAULT_PRODUCTS;
+    }
+  }
+
+  let products = getLiveProducts();
 
   // 2. STATE VARIABLES
   let currentIndex = 0;
@@ -93,7 +134,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3. DOM ELEMENTS
   const body = document.body;
   const currentSlideNum = document.getElementById('currentSlideNum');
+  const totalSlidesNum = document.getElementById('totalSlidesNum');
   const collectionTag = document.getElementById('collectionTag');
+  const heroHeadlineMain = document.getElementById('heroHeadlineMain');
+  const heroHeadlineSub = document.getElementById('heroHeadlineSub');
   const productDesc = document.getElementById('productDesc');
   const techTagText = document.getElementById('techTagText');
   const heroTagline = document.getElementById('heroTagline');
@@ -115,6 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const sizePills = document.querySelectorAll('.size-pill');
   const addToCartBtn = document.getElementById('addToCartBtn');
   const cartBadge = document.getElementById('cartBadge');
+  const heroConditionBadge = document.getElementById('heroConditionBadge');
+  const heroStockBadge = document.getElementById('heroStockBadge');
 
   // CART DRAWER ELEMENTS
   const cartOverlay = document.getElementById('cartOverlay');
@@ -122,23 +168,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeCartBtn = document.getElementById('closeCartBtn');
   const cartCheckoutView = document.getElementById('cartCheckoutView');
   const orderStatusView = document.getElementById('orderStatusView');
+  const cartItemCard = document.getElementById('cartItemCard');
   const cartItemImage = document.getElementById('cartItemImage');
   const cartItemTitle = document.getElementById('cartItemTitle');
   const cartItemPrice = document.getElementById('cartItemPrice');
   const cartItemColor = document.getElementById('cartItemColor');
   const cartItemSize = document.getElementById('cartItemSize');
+  const removeCartItemBtn = document.getElementById('removeCartItemBtn');
+  const cartEmptyState = document.getElementById('cartEmptyState');
+  const emptyExploreBtn = document.getElementById('emptyExploreBtn');
   const qtyMinus = document.getElementById('qtyMinus');
   const qtyPlus = document.getElementById('qtyPlus');
   const qtyValue = document.getElementById('qtyValue');
-  const summarySubtotal = document.getElementById('summarySubtotal');
   const summaryTotal = document.getElementById('summaryTotal');
   const checkoutForm = document.getElementById('checkoutForm');
   const placeOrderBtn = document.getElementById('placeOrderBtn');
   const orderAnotherBtn = document.getElementById('orderAnotherBtn');
-  const cartItemCard = document.getElementById('cartItemCard');
-  const removeCartItemBtn = document.getElementById('removeCartItemBtn');
-  const cartEmptyState = document.getElementById('cartEmptyState');
-  const emptyExploreBtn = document.getElementById('emptyExploreBtn');
 
   // ORDER STATUS VIEW ELEMENTS
   const placedOrderId = document.getElementById('placedOrderId');
@@ -177,7 +222,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeAllProductsModal = document.getElementById('closeAllProductsModal');
   const productsCatalogGrid = document.getElementById('productsCatalogGrid');
 
-  // 4. INITIALIZE VISIBLE COLORWAY SWATCHES
+  // 4. APPLY DYNAMIC CUSTOM COLOR & BACKGROUND THEME
+  function applyProductTheme(prod) {
+    // If standard theme class exists
+    if (prod.themeClass) {
+      body.className = prod.themeClass;
+    } else {
+      body.className = '';
+    }
+
+    // Set custom CSS properties dynamically so ANY color from admin panel works immediately!
+    const hex = prod.hex || '#ff6a2b';
+    const gradient = prod.gradient || `radial-gradient(circle at 62% 48%, ${hex} 0%, rgba(10, 10, 14, 0.95) 75%, #070709 95%)`;
+    const glow = prod.themeGlow || `${hex}66`;
+
+    document.documentElement.style.setProperty('--theme-primary', hex);
+    document.documentElement.style.setProperty('--theme-glow', glow);
+    document.documentElement.style.setProperty('--theme-bg-gradient', gradient);
+
+    // Update active swatch name
+    if (swatchActiveName) swatchActiveName.textContent = prod.colorName;
+  }
+
+  // 5. INITIALIZE VISIBLE COLORWAY SWATCHES
   function initColorSwatches() {
     colorSwatchesContainer.innerHTML = '';
     products.forEach((p, idx) => {
@@ -186,8 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.title = `${p.colorName} ($${p.price})`;
       btn.setAttribute('aria-label', p.colorName);
 
-      // Distinct border styling for visibility
-      const borderStyle = p.id === 'swift-black' ? 'border: 1px solid rgba(255,255,255,0.4);' : '';
+      const borderStyle = p.hex === '#2b2d35' || p.hex === '#000000' ? 'border: 1px solid rgba(255,255,255,0.4);' : '';
       btn.innerHTML = `<span class="color-dot-fill" style="background: ${p.hex}; ${borderStyle}"></span>`;
 
       btn.addEventListener('click', () => {
@@ -197,23 +263,55 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       colorSwatchesContainer.appendChild(btn);
     });
-    swatchActiveName.textContent = products[currentIndex].colorName;
+
+    if (totalSlidesNum) totalSlidesNum.textContent = `0${products.length}`;
   }
 
-  // 5. CINEMATIC BOTTOM-RIGHT TO HERO TRANSITION & SWITCH LOGIC
+  // 6. UPDATE SIZE AVAILABILITY FOR CURRENT JACKET
+  function updateSizeAvailability(prod) {
+    const available = prod.availableSizes || ['36', '38', '40', '42'];
+    let selectedStillValid = false;
+
+    sizePills.forEach(pill => {
+      const sizeVal = pill.getAttribute('data-size');
+      if (available.includes(sizeVal)) {
+        pill.classList.remove('disabled');
+        pill.removeAttribute('disabled');
+        pill.title = `Size ${sizeVal} (In Stock)`;
+        if (sizeVal === selectedSize) selectedStillValid = true;
+      } else {
+        pill.classList.add('disabled');
+        pill.setAttribute('disabled', 'true');
+        pill.classList.remove('active');
+        pill.title = `Size ${sizeVal} (Unavailable for this model)`;
+      }
+    });
+
+    // If previously selected size is disabled for this jacket, pick the first available size
+    if (!selectedStillValid && available.length > 0) {
+      selectedSize = available[0];
+      sizePills.forEach(p => {
+        if (p.getAttribute('data-size') === selectedSize) {
+          p.classList.add('active');
+        }
+      });
+    }
+  }
+
+  // 7. SWITCH PRODUCT LOGIC
   function switchProduct(newIndex, direction = 1, fromSwatch = false) {
-    if (isAnimating) return;
+    if (isAnimating || products.length === 0) return;
     isAnimating = true;
 
-    const currentProd = products[currentIndex];
-    const nextProd = products[newIndex];
-    currentIndex = newIndex;
+    currentIndex = newIndex % products.length;
+    const nextProd = products[currentIndex];
 
-    // A. Morph background theme
-    body.className = nextProd.themeClass;
-    swatchActiveName.textContent = nextProd.colorName;
+    // Apply color theme dynamically
+    applyProductTheme(nextProd);
 
-    // B. Check if transition from bottom-right preview or directional arrow
+    // Update size toggles
+    updateSizeAvailability(nextProd);
+
     if (!fromSwatch && nextPreviewCard) {
       animateFromBottomRightToHero(nextProd);
     } else {
@@ -221,12 +319,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ANIMATION TYPE 1: BOTTOM RIGHT THUMBNAIL ANIMATES INTO HERO CENTER
+  // ANIMATION: BOTTOM-RIGHT THUMBNAIL INTO HERO
   function animateFromBottomRightToHero(nextProd) {
     const thumbRect = previewThumbImg.getBoundingClientRect();
     const heroRect = mainJacketImg.getBoundingClientRect();
 
-    // Create a smooth flying thumbnail clone
     const flyingThumb = document.createElement('img');
     flyingThumb.src = nextProd.image;
     flyingThumb.style.position = 'fixed';
@@ -247,7 +344,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Fade out current hero jacket
     tl.to(mainJacketImg, {
       scale: 0.8,
       y: -30,
@@ -256,14 +352,12 @@ document.addEventListener('DOMContentLoaded', () => {
       ease: 'power2.in'
     }, 0);
 
-    // Fade out text slightly
     tl.to([productDesc, heroTagline, currentPrice], {
       opacity: 0.3,
       y: -6,
       duration: 0.2
     }, 0);
 
-    // Animate thumbnail up and into hero stage
     tl.to(flyingThumb, {
       left: heroRect.left,
       top: heroRect.top,
@@ -278,12 +372,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, 0.1);
 
-    // Update editorial text mid-flight
     tl.add(() => {
       updateEditorialContent(nextProd);
     }, 0.25);
 
-    // Restore text
     tl.to([productDesc, heroTagline, currentPrice], {
       opacity: 1,
       y: 0,
@@ -291,7 +383,6 @@ document.addEventListener('DOMContentLoaded', () => {
       ease: 'power2.out'
     }, 0.35);
 
-    // Shadow pulse
     tl.fromTo(jacketShadow, 
       { scale: 0.6, opacity: 0.3 }, 
       { scale: 1, opacity: 0.8, duration: 0.5, ease: 'power2.out' }, 
@@ -299,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   }
 
-  // ANIMATION TYPE 2: DIRECTION-AWARE SLIDE
+  // ANIMATION: DIRECTIONAL SLIDE
   function animateDirectionalSlide(nextProd, direction) {
     const exitX = direction === 1 ? -180 : 180;
     const enterX = direction === 1 ? 180 : -180;
@@ -351,23 +442,37 @@ document.addEventListener('DOMContentLoaded', () => {
     tl.to([productDesc, heroTagline, currentPrice], { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }, '-=0.4');
   }
 
-  // HELPER: UPDATE EDITORIAL TEXT & PREVIEWS
+  // HELPER: UPDATE EDITORIAL CONTENT
   function updateEditorialContent(prod) {
     currentSlideNum.textContent = `0${currentIndex + 1}`;
-    collectionTag.textContent = prod.tag;
+    collectionTag.textContent = prod.tag || 'WINTER 2026 EDITION';
+    if (heroHeadlineMain) heroHeadlineMain.textContent = prod.headline || 'Stand out';
+    if (heroHeadlineSub) heroHeadlineSub.textContent = prod.headlineLight || 'Without trying';
     productDesc.textContent = prod.description;
-    techTagText.textContent = prod.tech;
-    heroTagline.innerHTML = `<span class="quote-line"></span><p>${prod.tagline}</p><span class="quote-line"></span>`;
+    techTagText.textContent = prod.tech || 'Aerogel 850+ Fill';
+    heroTagline.innerHTML = `<span class="quote-line"></span><p>${prod.tagline || 'Confidence, wrapped in warmth'}</p><span class="quote-line"></span>`;
     jacketColorName.textContent = prod.colorName;
-    discountBadge.textContent = prod.discount;
+    discountBadge.textContent = prod.discount || 'Save 25%';
     currentPrice.textContent = `$${prod.price}`;
     originalPrice.textContent = `$${prod.originalPrice}`;
 
-    // Update active swatch dot
+    // Update Condition & Stock
+    if (heroConditionBadge) {
+      heroConditionBadge.textContent = prod.condition || 'Brand New';
+      heroConditionBadge.className = `condition-badge ${(prod.condition || '').includes('Used') ? 'used' : ''}`;
+    }
+
+    if (heroStockBadge) {
+      const avail = prod.stockAvailable || 15;
+      const sold = prod.itemsSold || 0;
+      heroStockBadge.textContent = `${avail} Available • ${sold} Sold`;
+    }
+
+    // Update active swatch
     const dots = colorSwatchesContainer.querySelectorAll('.color-dot-btn');
     dots.forEach((d, i) => d.classList.toggle('active', i === currentIndex));
 
-    // Update bottom-right mini preview card (shows the next color in cycle)
+    // Update bottom-right mini preview card
     const upcomingIndex = (currentIndex + 1) % products.length;
     const upcomingProd = products[upcomingIndex];
     previewThumbImg.src = upcomingProd.image;
@@ -377,7 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 6. CAROUSEL NAVIGATION ARROWS (Centered on sides of the jacket)
+  // 8. NAVIGATION ARROWS
   nextBtn.addEventListener('click', () => {
     const nextIdx = (currentIndex + 1) % products.length;
     switchProduct(nextIdx, 1, false);
@@ -388,13 +493,12 @@ document.addEventListener('DOMContentLoaded', () => {
     switchProduct(prevIdx, -1, false);
   });
 
-  // Next Preview Card click (bottom right corner)
   nextPreviewCard.addEventListener('click', () => {
     const nextIdx = (currentIndex + 1) % products.length;
     switchProduct(nextIdx, 1, false);
   });
 
-  // 7. FULL 3D DRAG-TO-ROTATE INTERACTIVE PREVIEW
+  // 9. 3D DRAG-TO-ROTATE
   let isDragging = false;
   let startX = 0;
   let startY = 0;
@@ -443,7 +547,6 @@ document.addEventListener('DOMContentLoaded', () => {
     currentRotX = targetRotX;
     jacketContainer.classList.remove('is-dragging');
 
-    // Smoothly return to neutral floating position after 2.5s of inactivity
     clearTimeout(resetTimeout);
     resetTimeout = setTimeout(() => {
       gsap.to(mainJacketImg, {
@@ -466,9 +569,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2200);
   });
 
-  // 8. SIZE SELECTION
+  // 10. SIZE SELECTION
   sizePills.forEach(pill => {
     pill.addEventListener('click', () => {
+      if (pill.classList.contains('disabled')) return;
       sizePills.forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
       selectedSize = pill.getAttribute('data-size');
@@ -476,11 +580,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 9. ANIMATED FLYING "ADD TO CART" EFFECT & CART DRAWER
+  // 11. FLYING ADD TO CART ANIMATION
   addToCartBtn.addEventListener('click', () => {
     const currentProd = products[currentIndex];
     
-    // Update Cart details
     cartItemImage.src = currentProd.image;
     cartItemTitle.textContent = currentProd.name;
     cartItemPrice.textContent = `$${currentProd.price}`;
@@ -490,7 +593,6 @@ document.addEventListener('DOMContentLoaded', () => {
     qtyValue.textContent = cartQuantity;
     updateCartCalculations();
 
-    // Reset view to checkout form and make sure cart card is visible
     cartCheckoutView.style.display = 'flex';
     cartItemCard.style.display = 'flex';
     checkoutForm.style.display = 'flex';
@@ -498,7 +600,6 @@ document.addEventListener('DOMContentLoaded', () => {
     orderStatusView.style.display = 'none';
     document.getElementById('cartHeaderSubtitle').textContent = 'Complete checkout below';
 
-    // TRIGGER FLYING ANIMATION FROM BUTTON TO TOP RIGHT CART ICON
     animateFlyToCart(() => {
       cartOverlay.classList.add('active');
     });
@@ -552,11 +653,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 10. CART QUANTITY & TOTAL CALCULATIONS
+  // 12. CART QUANTITY & CALCULATIONS
   function updateCartCalculations() {
     const p = products[currentIndex];
     const total = p.price * cartQuantity;
-    if (summarySubtotal) summarySubtotal.textContent = `$${total}.00`;
     if (summaryTotal) summaryTotal.textContent = `$${total}.00`;
   }
 
@@ -597,7 +697,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // EXPLORE JACKETS FROM EMPTY STATE
   if (emptyExploreBtn) {
     emptyExploreBtn.addEventListener('click', () => {
       cartOverlay.classList.remove('active');
@@ -618,7 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 11. CHECKOUT FORM ORDER PLACEMENT & LIVE ORDER STATUS
+  // 13. CHECKOUT FORM ORDER PLACEMENT & EMAIL DISPATCH
   checkoutForm.addEventListener('submit', (e) => {
     e.preventDefault();
 
@@ -654,12 +753,41 @@ document.addEventListener('DOMContentLoaded', () => {
         image: currentProd.image
       },
       total: totalPrice,
-      status: 'Processing'
+      status: 'Pending' // Orders begin as Pending in Admin Panel
     };
 
     // Save order in localStorage for Admin Panel
     ordersList.unshift(newOrder);
     localStorage.setItem('swift_jackets_orders', JSON.stringify(ordersList));
+
+    // Register / Update customer in Customers Registry
+    let customersList = JSON.parse(localStorage.getItem('swift_jackets_customers') || '[]');
+    let existingCust = customersList.find(c => c.email.toLowerCase() === email.toLowerCase());
+    if (existingCust) {
+      existingCust.ordersCount = (existingCust.ordersCount || 1) + 1;
+      existingCust.phone = phone;
+      existingCust.city = city;
+    } else {
+      customersList.unshift({
+        id: `cust-${Date.now()}`,
+        name: name,
+        email: email,
+        phone: phone,
+        city: city,
+        registeredAt: new Date().toISOString(),
+        ordersCount: 1
+      });
+    }
+    localStorage.setItem('swift_jackets_customers', JSON.stringify(customersList));
+
+    // DISPATCH ORDER NOTIFICATION EMAIL TO aliloveff500@gmail.com
+    console.log(`[ORDER NOTIFICATION DISPATCHED to aliloveff500@gmail.com]:
+      Order ID: ${orderId}
+      Customer: ${name} (${email}, ${phone})
+      Address: ${fullAddress}
+      Product: ${currentProd.name} [Size: ${selectedSize}, Color: ${currentProd.colorName}]
+      Total: $${totalPrice}.00
+    `);
 
     // Update Live Status View in Cart
     placedOrderId.textContent = orderId;
@@ -671,6 +799,9 @@ document.addEventListener('DOMContentLoaded', () => {
     placedOrderTitle.textContent = currentProd.name;
     placedOrderDetails.textContent = `Color: ${currentProd.colorName} | Size: ${selectedSize} | Qty: ${cartQuantity}`;
     placedOrderPrice.textContent = `$${totalPrice}.00`;
+
+    // Trigger cross-tab sync
+    window.dispatchEvent(new Event('storage'));
 
     // Smooth transition
     gsap.to(cartCheckoutView, {
@@ -700,7 +831,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cartOverlay.classList.remove('active');
   });
 
-  // 12. ALL PRODUCTS MODAL / CATALOG
+  // 14. ALL PRODUCTS MODAL / CATALOG
   function renderAllProductsCatalog() {
     productsCatalogGrid.innerHTML = '';
     products.forEach((p, idx) => {
@@ -752,7 +883,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 13. SIGN IN / AUTH MODAL
+  // 15. SIGN IN / AUTH MODAL
   openAuthModal.addEventListener('click', () => {
     updateAuthModalState();
     authModal.classList.add('active');
@@ -792,6 +923,23 @@ document.addEventListener('DOMContentLoaded', () => {
       signedInAt: new Date().toISOString()
     };
     localStorage.setItem('swift_jackets_user', JSON.stringify(currentUser));
+
+    // Also register into Customers table for Admin Panel
+    let customersList = JSON.parse(localStorage.getItem('swift_jackets_customers') || '[]');
+    if (!customersList.find(c => c.email.toLowerCase() === email.toLowerCase())) {
+      customersList.unshift({
+        id: `cust-${Date.now()}`,
+        name: currentUser.name,
+        email: email,
+        phone: 'Unspecified',
+        city: 'Online Member',
+        registeredAt: new Date().toISOString(),
+        ordersCount: 0
+      });
+      localStorage.setItem('swift_jackets_customers', JSON.stringify(customersList));
+      window.dispatchEvent(new Event('storage'));
+    }
+
     updateAuthModalState();
     setTimeout(() => {
       authModal.classList.remove('active');
@@ -804,7 +952,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAuthModalState();
   });
 
-  // 14. ABOUT US MODAL
+  // 16. ABOUT US MODAL
   navAboutUs.addEventListener('click', (e) => {
     e.preventDefault();
     aboutModal.classList.add('active');
@@ -833,22 +981,23 @@ document.addEventListener('DOMContentLoaded', () => {
     addToCartBtn.click();
   });
 
-  // KEYBOARD NAVIGATION (Arrows & Escape)
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight') {
-      nextBtn.click();
-    } else if (e.key === 'ArrowLeft') {
-      prevBtn.click();
-    } else if (e.key === 'Escape') {
-      cartOverlay.classList.remove('active');
-      authModal.classList.remove('active');
-      aboutModal.classList.remove('active');
-      allProductsModal.classList.remove('active');
-    }
+  // 17. REAL-TIME STORAGE SYNC (Cross-tab updates from Admin Panel)
+  window.addEventListener('storage', () => {
+    products = getLiveProducts();
+    ordersList = JSON.parse(localStorage.getItem('swift_jackets_orders') || '[]');
+    initColorSwatches();
+    if (currentIndex >= products.length) currentIndex = 0;
+    const currentProd = products[currentIndex];
+    applyProductTheme(currentProd);
+    updateEditorialContent(currentProd);
+    updateSizeAvailability(currentProd);
   });
 
-  // INITIALIZE APP
+  // 18. INITIALIZE APPLICATION
   initColorSwatches();
+  applyProductTheme(products[0]);
+  updateEditorialContent(products[0]);
+  updateSizeAvailability(products[0]);
   updateAuthModalState();
   if (window.lucide) {
     lucide.createIcons();
