@@ -2162,7 +2162,7 @@ html, body {
   .navbar {
     grid-template-columns: 1fr auto;
     gap: 1rem;
-    padding-bottom: 1rem;
+    padding-bottom: 0.75rem;
   }
   .pill-nav {
     display: none;
@@ -2171,7 +2171,7 @@ html, body {
     grid-template-columns: 1fr;
     text-align: center;
     padding-top: 0.5rem;
-    gap: 2.2rem;
+    gap: 1.4rem;
   }
   .hero-left {
     align-items: center;
@@ -2179,33 +2179,50 @@ html, body {
   }
   .hero-top-meta {
     justify-content: center;
-    gap: 1.5rem;
+    gap: 1.2rem;
   }
   .hero-condition-stock-row {
     justify-content: center;
   }
+  /* On mobile/tablet, hide redundant secondary CTA and social links for clean luxury aesthetic */
   .hero-cta-group {
-    justify-content: center;
+    display: none !important;
   }
   .hero-socials {
-    justify-content: center;
+    display: none !important;
+  }
+  .hero-description {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    max-width: 440px;
+    margin: 0.2rem auto 0;
   }
   .hero-center {
     order: -1;
-    min-height: 380px;
+    min-height: 350px;
   }
   .hero-jacket-img {
-    max-height: 360px;
+    max-height: 330px;
   }
   .stage-arrow-btn.prev-stage-btn { left: 8px; width: 44px; height: 44px; }
   .stage-arrow-btn.next-stage-btn { right: 8px; width: 44px; height: 44px; }
   .hero-right {
-    max-width: 480px;
+    max-width: 440px;
     margin: 0 auto;
     align-items: center;
+    width: 100%;
   }
   .price-card {
     align-items: center;
+  }
+  .price-values {
+    justify-content: center;
+    white-space: nowrap;
+  }
+  .current-price {
+    font-size: 2.3rem;
+    white-space: nowrap;
   }
   .next-preview-card {
     width: 100%;
@@ -2214,24 +2231,141 @@ html, body {
 
 @media (max-width: 640px) {
   .app-container {
-    padding: 0.9rem 1rem;
+    padding: 0.75rem 1rem 3.5rem;
   }
   .brand-name {
-    font-size: 1rem;
+    font-size: 0.98rem;
+  }
+  .hero-section {
+    gap: 1rem;
+    padding-top: 0;
   }
   .main-headline {
-    font-size: 2.4rem;
-    line-height: 1.12;
+    font-size: 1.85rem;
+    line-height: 1.15;
+    margin-bottom: 0.25rem;
+  }
+  .headline-light {
+    font-size: 1.85rem;
+  }
+  .hero-description {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    max-width: 310px;
+    margin: 0 auto;
+    color: rgba(255, 255, 255, 0.75);
+  }
+  .hero-top-meta {
+    margin-bottom: 0.15rem;
+  }
+  .collection-pill {
+    padding: 0.25rem 0.65rem;
+    font-size: 0.7rem;
+  }
+  .hero-condition-stock-row {
+    gap: 0.4rem;
+    margin-top: -0.2rem;
+    margin-bottom: 0.2rem;
+  }
+  .condition-badge, .stock-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.6rem;
   }
   .hero-center {
-    min-height: 310px;
+    min-height: 270px;
+    margin-bottom: 0;
   }
   .hero-jacket-img {
-    max-height: 290px;
+    max-height: 250px;
+  }
+  .interactive-3d-hint {
+    bottom: 4px;
+    font-size: 0.68rem;
+    padding: 0.22rem 0.55rem;
+  }
+  .center-tagline {
+    margin-top: 0.35rem;
+    font-size: 0.82rem;
+  }
+  .center-tagline .quote-line {
+    width: 25px;
   }
   .stage-arrow-btn {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
+  }
+  .price-card {
+    padding: 0.6rem 0.8rem;
+    margin-bottom: 0.3rem;
+  }
+  .price-header {
+    justify-content: center;
+    gap: 0.6rem;
+  }
+  .color-indicator-name {
+    font-size: 0.82rem;
+  }
+  .discount-badge {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.45rem;
+  }
+  .price-values {
+    gap: 0.55rem;
+    justify-content: center;
+    white-space: nowrap;
+  }
+  .current-price {
+    font-size: 1.85rem;
+    white-space: nowrap !important;
+  }
+  .original-price {
+    font-size: 1.05rem;
+  }
+  .selector-block {
+    gap: 0.45rem;
+    margin-bottom: 0.6rem;
+  }
+  .selector-label {
+    font-size: 0.78rem;
+  }
+  .size-options {
+    gap: 0.45rem;
+  }
+  .size-pill {
+    width: 42px;
+    height: 42px;
+    font-size: 0.85rem;
+  }
+  .color-swatches {
+    gap: 0.6rem;
+  }
+  .color-dot-btn {
+    width: 34px;
+    height: 34px;
+  }
+  .cart-action-wrap {
+    width: 100%;
+    margin-top: 0.3rem;
+  }
+  .add-to-cart-btn {
+    padding: 0.85rem 1.4rem;
+    font-size: 0.95rem;
+  }
+  .next-preview-card {
+    padding: 0.55rem 0.8rem;
+    gap: 0.7rem;
+    margin-top: 0.35rem;
+    border-radius: var(--radius-md);
+  }
+  .preview-image-wrap {
+    width: 48px;
+    height: 48px;
+  }
+  .preview-title {
+    font-size: 0.85rem;
+  }
+  .preview-price {
+    font-size: 0.82rem;
   }
   .form-grid {
     grid-template-columns: 1fr;
@@ -2243,21 +2377,21 @@ html, body {
     max-width: 100%;
   }
   .floating-support-btn {
-    bottom: 1rem;
-    right: 1rem;
-    padding: 0.5rem 0.9rem 0.5rem 0.5rem;
+    bottom: 0.85rem;
+    right: 0.85rem;
+    padding: 0.42rem 0.8rem 0.42rem 0.42rem;
+    gap: 0.5rem;
   }
   .support-icon-circle {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
+  }
+  .support-icon-circle svg, .support-icon-circle i {
+    width: 16px;
+    height: 16px;
   }
   .support-text {
-    font-size: 0.78rem;
-  }
-  .size-pill {
-    width: 44px;
-    height: 44px;
-    font-size: 0.88rem;
+    font-size: 0.75rem;
   }
 }
 

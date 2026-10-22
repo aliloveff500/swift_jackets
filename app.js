@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
       headline: 'Stand out',
       headlineLight: 'Without trying',
       tagline: 'Confidence, wrapped in warmth',
-      description: "It's not just about staying warm, it's about stepping outside and instantly feeling confident, comfortable, and completely yourself. Designed to elevate even the simplest outfit, this jacket wraps you in lightweight warmth.",
+      description: "Ultralight aerogel warmth. Sculpted modern silhouette.",
       tech: 'Aerogel 850+ Fill',
       image: 'assets/images/jacket_orange.png'
     },
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
       headline: 'Quiet power,',
       headlineLight: 'Unmatched warmth',
       tagline: 'Precision cut, engineered for stealth',
-      description: "Matte obsidian finish with stormproof seam sealing and ergonomic baffle architecture. A subtle silhouette engineered to deflect freezing gusts while locking in natural body warmth.",
+      description: "Matte stormproof shell. Engineered for quiet warmth.",
       tech: 'GORE Windstopper & 850 Down',
       image: 'assets/images/jacket_black.png'
     },
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
       headline: 'Pure elegance,',
       headlineLight: 'Effortless warmth',
       tagline: 'Luminous comfort in sub-zero calm',
-      description: "High-sheen pearl finish reflecting winter radiance. Ultra-compressible 850 fill-power responsibly sourced down for cloud-like thermal comfort that transitions seamlessly from chalet to street.",
+      description: "Sub-zero pearl ripstop. Responsible 850 down fill.",
       tech: 'Hydrophobic Pearl Ripstop',
       image: 'assets/images/jacket_white.png'
     },
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
       headline: 'Bold presence,',
       headlineLight: 'Timeless comfort',
       tagline: 'Command attention in every room',
-      description: "Vibrant high-contrast crimson with satin luster. Windproof micro-weave that stands out across city skylines while trapping vital core heat during rapid temperature drops.",
+      description: "Windproof micro-weave. High-contrast thermal warmth.",
       tech: 'Thermal Core Micro-Weave',
       image: 'assets/images/jacket_red.png'
     }
@@ -125,6 +125,16 @@ document.addEventListener('DOMContentLoaded', () => {
         parsed.forEach(p => {
           if (p.price < 1000) p.price = p.price * 100;
           if (p.originalPrice < 1000) p.originalPrice = p.originalPrice * 100;
+          // Auto-migrate legacy long paragraph text to clean concise 1-liners
+          if (p.description && p.description.includes("It's not just about staying warm")) {
+            p.description = "Ultralight aerogel warmth. Sculpted modern silhouette.";
+          } else if (p.description && p.description.includes("Matte obsidian finish")) {
+            p.description = "Matte stormproof shell. Engineered for quiet warmth.";
+          } else if (p.description && p.description.includes("High-sheen pearl finish")) {
+            p.description = "Sub-zero pearl ripstop. Responsible 850 down fill.";
+          } else if (p.description && p.description.includes("Vibrant high-contrast crimson")) {
+            p.description = "Windproof micro-weave. High-contrast thermal warmth.";
+          }
         });
         localStorage.setItem('swift_jackets_products', JSON.stringify(parsed));
         return parsed;
