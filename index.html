@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SWIFT JACKETS — Stand Out Without Trying</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- GSAP for 60FPS High-End Animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="theme-orange">
+
+  <!-- DYNAMIC BACKGROUND LIGHTING CANVAS -->
+  <div class="dynamic-bg-container">
+    <div class="bg-gradient-layer current"></div>
+    <div class="bg-ambient-glow"></div>
+    <div class="bg-noise"></div>
+  </div>
+
+  <!-- MAIN WRAPPER -->
+  <div class="app-container">
+
+    <!-- TOP NAVIGATION -->
+    <header class="navbar">
+      <!-- BRAND LOGO -->
+      <a href="#" class="brand-logo">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        <span class="brand-name">SWIFT <span>JACKETS</span></span>
+      </a>
+
+      <!-- FLOATING PILL MENU -->
+      <nav class="pill-nav">
+        <a href="#hero" class="nav-item active" id="navHero">PUFFER JACKET</a>
+        <a href="#all-products" class="nav-item" id="navAllProducts">ALL PRODUCTS</a>
+        <a href="#about" class="nav-item" id="navAboutUs">ABOUT US</a>
+        <a href="#contact" class="nav-item" id="navContact">CONTACT</a>
+      </nav>
+
+      <!-- RIGHT NAV ACTIONS -->
+      <div class="nav-actions">
+        <!-- USER / SIGN IN BUTTON -->
+        <button class="nav-btn auth-btn" id="openAuthModal" title="Account">
+          <i data-lucide="user" class="icon-sm"></i>
+          <span class="auth-label" id="authButtonText">Sign In</span>
+        </button>
+
+        <!-- CART ICON BUTTON -->
+        <button class="nav-btn cart-btn" id="openCartDrawer" aria-label="Cart" title="View Cart">
+          <div class="cart-icon-wrap">
+            <i data-lucide="shopping-bag" class="icon-sm"></i>
+            <span class="cart-badge" id="cartBadge">0</span>
+          </div>
+        </button>
+      </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <main class="hero-section" id="hero">
+
+      <!-- LEFT COLUMN: EDITORIAL CONTENT -->
+      <section class="hero-left">
+        <!-- COLLECTION STATUS & COUNTER -->
+        <div class="hero-top-meta">
+          <div class="collection-pill">
+            <span class="pulse-dot"></span>
+            <span id="collectionTag">WINTER 2026 EDITION</span>
+          </div>
+          <div class="carousel-counter">
+            <span id="currentSlideNum">01</span>
+            <span class="divider">/</span>
+            <span class="total">04</span>
+          </div>
+        </div>
+
+        <!-- MAIN HEADLINE -->
+        <div class="headline-wrap">
+          <h1 class="main-headline">
+            Stand out<br>
+            <span class="headline-light">Without trying</span>
+          </h1>
+        </div>
+
+        <!-- PRODUCT DESCRIPTION -->
+        <p class="hero-description" id="productDesc">
+          It's not just about staying warm, it's about stepping outside and instantly feeling confident, comfortable, and completely yourself. Designed to elevate even the simplest outfit, this jacket wraps you in lightweight warmth.
+        </p>
+
+        <!-- ACTION ROW: GET THE LOOK & QUICK SPECS -->
+        <div class="hero-cta-group">
+          <button class="cta-primary" id="getTheLookBtn">
+            <span>Get the look</span>
+            <div class="cta-arrow">
+              <i data-lucide="arrow-right"></i>
+            </div>
+          </button>
+
+          <div class="tech-tag" id="productTechTag">
+            <i data-lucide="wind" class="icon-xs"></i>
+            <span id="techTagText">Aerogel 850+ Fill</span>
+          </div>
+        </div>
+
+        <!-- BOTTOM SOCIALS -->
+        <div class="hero-socials">
+          <a href="#" aria-label="Instagram"><i data-lucide="instagram"></i></a>
+          <a href="#" aria-label="Facebook"><i data-lucide="facebook"></i></a>
+          <a href="#" aria-label="Twitter"><i data-lucide="twitter"></i></a>
+          <a href="#" aria-label="Share"><i data-lucide="share-2"></i></a>
+        </div>
+      </section>
+
+      <!-- CENTER: HERO JACKET FLANKED BY NAVIGATION ARROWS -->
+      <section class="hero-center" id="jacketStage">
+        
+        <!-- LEFT FLANKING ARROW (Side of the jacket) -->
+        <button class="stage-arrow-btn prev-stage-btn" id="prevBtn" aria-label="Previous Jacket" title="Previous Colorway">
+          <i data-lucide="chevron-left"></i>
+        </button>
+
+        <!-- AMBIENT GLOW PLATFORM -->
+        <div class="jacket-ambient-platform">
+          <div class="ambient-ring"></div>
+        </div>
+
+        <!-- 3D INTERACTIVE JACKET CONTAINER -->
+        <div class="jacket-frame" id="jacketContainer" title="Click and drag to 3D rotate">
+          <img 
+            src="assets/images/jacket_orange.png" 
+            alt="Swift Puffer Jacket" 
+            class="hero-jacket-img" 
+            id="mainJacketImg"
+          >
+          <div class="jacket-realistic-shadow" id="jacketShadow"></div>
+
+          <!-- 3D INTERACTIVE HINT BADGE -->
+          <div class="interactive-3d-hint">
+            <i data-lucide="move" class="icon-xs"></i>
+            <span>Drag to 3D rotate</span>
+          </div>
+        </div>
+
+        <!-- RIGHT FLANKING ARROW (Side of the jacket) -->
+        <button class="stage-arrow-btn next-stage-btn" id="nextBtn" aria-label="Next Jacket" title="Next Colorway">
+          <i data-lucide="chevron-right"></i>
+        </button>
+
+        <!-- CENTER TAGLINE -->
+        <div class="center-tagline" id="heroTagline">
+          <span class="quote-line"></span>
+          <p>Confidence, wrapped in warmth</p>
+          <span class="quote-line"></span>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: PRICING, SELECTORS & BOTTOM-RIGHT NEXT PREVIEW -->
+      <section class="hero-right">
+        <!-- PRICE CARD -->
+        <div class="price-card">
+          <div class="price-header">
+            <span class="color-indicator-name" id="jacketColorName">Solar Ember</span>
+            <span class="discount-badge" id="discountBadge">Save 25%</span>
+          </div>
+          <div class="price-values">
+            <span class="current-price" id="currentPrice">$149</span>
+            <span class="original-price" id="originalPrice">$199</span>
+          </div>
+        </div>
+
+        <!-- SIZE SELECTOR -->
+        <div class="selector-block size-selector">
+          <label class="selector-label">Choose your size:</label>
+          <div class="size-options" id="sizeOptions">
+            <button class="size-pill" data-size="36">36</button>
+            <button class="size-pill active" data-size="38">38</button>
+            <button class="size-pill" data-size="40">40</button>
+            <button class="size-pill" data-size="42">42</button>
+          </div>
+        </div>
+
+        <!-- COLOR SELECTOR SWATCHES (All colors clearly visible) -->
+        <div class="selector-block color-selector">
+          <div class="swatch-header-row">
+            <label class="selector-label">Select Colorway:</label>
+            <span class="swatch-active-label" id="swatchActiveName">Solar Ember</span>
+          </div>
+          <div class="color-swatches" id="colorSwatches">
+            <!-- Dynamically populated with visible color rings & tooltips -->
+          </div>
+        </div>
+
+        <!-- ADD TO CART BUTTON WITH FLYING ANIMATION -->
+        <div class="cart-action-wrap">
+          <button class="add-to-cart-btn" id="addToCartBtn">
+            <div class="btn-content">
+              <i data-lucide="shopping-bag" class="icon-sm"></i>
+              <span class="btn-text">Add to cart</span>
+            </div>
+          </button>
+          <!-- 'Free Express Delivery & Returns' removed as requested by user -->
+        </div>
+
+        <!-- BOTTOM RIGHT CORNER: MINI NEXT PRODUCT PREVIEW (Exact match to reference video) -->
+        <div class="next-preview-card" id="nextPreviewCard" title="Click to animate into Hero!">
+          <div class="preview-badge">Next In Line</div>
+          <div class="preview-image-wrap">
+            <img 
+              src="assets/images/jacket_black.png" 
+              alt="Next Jacket Preview" 
+              class="preview-thumb-img" 
+              id="previewThumbImg"
+            >
+          </div>
+          <div class="preview-meta">
+            <span class="preview-title" id="previewColorTitle">Stealth Obsidian</span>
+            <span class="preview-price" id="previewPriceTitle">$189</span>
+            <span class="preview-prompt">Click to switch &rarr;</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- ALL PRODUCTS MODAL / SECTION -->
+  <div class="modal-overlay" id="allProductsModal">
+    <div class="catalog-modal-card">
+      <div class="catalog-header">
+        <div>
+          <span class="about-badge">FULL COLLECTION</span>
+          <h2 class="catalog-title">All Swift Outerwear</h2>
+          <p class="catalog-subtitle">Select any jacket to launch directly in the 3D Hero Studio</p>
+        </div>
+        <button class="close-btn" id="closeAllProductsModal" aria-label="Close Products">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="products-grid" id="productsCatalogGrid">
+        <!-- Rendered by JS: 4 Jackets with distinct prices, specs, and direct 3D preview button -->
+      </div>
+    </div>
+  </div>
+
+  <!-- CART & CHECKOUT DRAWER / MODAL -->
+  <div class="drawer-overlay" id="cartOverlay">
+    <div class="cart-drawer" id="cartDrawer">
+      
+      <!-- CART HEADER -->
+      <div class="drawer-header">
+        <div class="drawer-title-group">
+          <div class="cart-pill-icon">
+            <i data-lucide="shopping-bag" class="icon-sm"></i>
+          </div>
+          <div>
+            <h2 class="drawer-title">Your Shopping Bag</h2>
+            <p class="drawer-subtitle" id="cartHeaderSubtitle">Complete checkout below</p>
+          </div>
+        </div>
+        <button class="close-btn" id="closeCartBtn" aria-label="Close Cart">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <!-- VIEW 1: ACTIVE CART & CHECKOUT FORM -->
+      <div class="drawer-body" id="cartCheckoutView">
+        
+        <!-- SELECTED PRODUCT SUMMARY CARD (With Delete/Remove Option) -->
+        <div class="order-item-card" id="cartItemCard">
+          <div class="item-img-wrap">
+            <img src="assets/images/jacket_orange.png" alt="Cart item" id="cartItemImage">
+          </div>
+          <div class="item-details">
+            <div class="item-head">
+              <h3 class="item-title" id="cartItemTitle">Swift ThermoPuff Apex</h3>
+              <!-- REMOVE ITEM BUTTON -->
+              <button class="cart-item-remove-btn" id="removeCartItemBtn" title="Remove jacket from cart" aria-label="Remove item">
+                <i data-lucide="trash-2" class="icon-xs"></i>
+              </button>
+            </div>
+            <div class="item-price-row">
+              <span class="item-price" id="cartItemPrice">$149</span>
+            </div>
+            <p class="item-variant">
+              Color: <span id="cartItemColor">Solar Ember</span> | Size: <span id="cartItemSize">38</span>
+            </p>
+            <div class="item-quantity-row">
+              <div class="qty-control">
+                <button class="qty-btn" id="qtyMinus">-</button>
+                <span class="qty-val" id="qtyValue">1</span>
+                <button class="qty-btn" id="qtyPlus">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EMPTY CART STATE (Shows when item is removed) -->
+        <div class="cart-empty-state" id="cartEmptyState" style="display: none;">
+          <div class="empty-icon-ring">
+            <i data-lucide="shopping-bag" class="icon-lg"></i>
+          </div>
+          <h3 class="empty-title">Your Bag is Empty</h3>
+          <p class="empty-desc">You removed the jacket from your shopping bag.</p>
+          <button class="cta-primary" id="emptyExploreBtn">Explore Collection</button>
+        </div>
+
+        <!-- CHECKOUT INFORMATION FORM -->
+        <form class="checkout-form" id="checkoutForm" onsubmit="return false;">
+          <div class="form-section-title">
+            <i data-lucide="map-pin" class="icon-xs"></i>
+            <span>Delivery & Customer Details</span>
+          </div>
+
+          <div class="form-grid">
+            <!-- FULL NAME -->
+            <div class="form-group col-span-2">
+              <label for="custName">Full Name *</label>
+              <input type="text" id="custName" placeholder="e.g. Hammad Khan" required>
+            </div>
+
+            <!-- EMAIL ADDRESS -->
+            <div class="form-group col-span-1">
+              <label for="custEmail">Email Address *</label>
+              <input type="email" id="custEmail" placeholder="hammad@example.com" required>
+            </div>
+
+            <!-- PHONE NUMBER -->
+            <div class="form-group col-span-1">
+              <label for="custPhone">Phone Number *</label>
+              <input type="tel" id="custPhone" placeholder="+92 300 1234567" required>
+            </div>
+
+            <!-- CITY -->
+            <div class="form-group col-span-1">
+              <label for="custCity">City *</label>
+              <input type="text" id="custCity" placeholder="Karachi / Lahore / Islamabad" required>
+            </div>
+
+            <!-- HOUSE NUMBER -->
+            <div class="form-group col-span-1">
+              <label for="custHouse">House / Apartment # *</label>
+              <input type="text" id="custHouse" placeholder="House 42-B, Floor 2" required>
+            </div>
+
+            <!-- STREET ADDRESS -->
+            <div class="form-group col-span-2">
+              <label for="custStreet">Street / Area Address *</label>
+              <input type="text" id="custStreet" placeholder="Street 14, Phase 5, DHA" required>
+            </div>
+          </div>
+
+          <!-- ORDER TOTAL CALCULATION (Free delivery removed) -->
+          <div class="order-summary-box">
+            <div class="summary-line total-line">
+              <span>Total Payable</span>
+              <span class="total-amount" id="summaryTotal">$149.00</span>
+            </div>
+          </div>
+
+          <!-- PLACE ORDER BUTTON -->
+          <button type="submit" class="place-order-btn" id="placeOrderBtn">
+            <span>Place Order Now</span>
+            <i data-lucide="check-circle" class="icon-sm"></i>
+          </button>
+        </form>
+
+      </div>
+
+      <!-- VIEW 2: ORDER SUCCESS & STATUS TRACKER -->
+      <div class="drawer-body order-status-view" id="orderStatusView" style="display: none;">
+        <div class="status-success-banner">
+          <div class="success-icon-ring">
+            <i data-lucide="check" class="icon-lg"></i>
+          </div>
+          <h2 class="status-title">Order Confirmed!</h2>
+          <p class="status-desc">Thank you for your order with Swift Jackets. We are already preparing your package.</p>
+        </div>
+
+        <!-- TRACKING DETAILS CARD -->
+        <div class="order-tracking-card">
+          <div class="tracking-meta-row">
+            <div>
+              <span class="meta-label">ORDER ID</span>
+              <h4 class="meta-val" id="placedOrderId">#SJ-98241</h4>
+            </div>
+            <div>
+              <span class="meta-label">CURRENT STATUS</span>
+              <span class="status-badge-live">
+                <span class="live-dot"></span>
+                <span id="placedOrderStatus">Processing</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- PROGRESS STEPS -->
+          <div class="tracking-progress-steps">
+            <div class="step-item completed">
+              <div class="step-dot"><i data-lucide="check"></i></div>
+              <span class="step-name">Placed</span>
+            </div>
+            <div class="step-line active"></div>
+            <div class="step-item current">
+              <div class="step-dot"><i data-lucide="package"></i></div>
+              <span class="step-name">Packaging</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-item">
+              <div class="step-dot"><i data-lucide="truck"></i></div>
+              <span class="step-name">Shipped</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-item">
+              <div class="step-dot"><i data-lucide="home"></i></div>
+              <span class="step-name">Delivered</span>
+            </div>
+          </div>
+
+          <!-- RECAP OF DESTINATION -->
+          <div class="recap-box">
+            <div class="recap-title">Delivery To:</div>
+            <p class="recap-text" id="placedOrderRecipient">Hammad Khan</p>
+            <p class="recap-text text-muted" id="placedOrderAddress">House 42-B, Street 14, DHA, Karachi</p>
+            <p class="recap-text text-muted" id="placedOrderContact">Phone: +92 300 1234567 | hammad@example.com</p>
+          </div>
+
+          <!-- RECAP OF PRODUCT -->
+          <div class="recap-product-row">
+            <img src="assets/images/jacket_orange.png" alt="Ordered jacket" id="placedOrderImg">
+            <div>
+              <div class="recap-name" id="placedOrderTitle">Swift ThermoPuff Apex</div>
+              <div class="recap-details" id="placedOrderDetails">Color: Solar Ember | Size: 38 | Qty: 1</div>
+            </div>
+            <div class="recap-price" id="placedOrderPrice">$149.00</div>
+          </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="status-actions">
+          <button class="btn-secondary" id="orderAnotherBtn">
+            <i data-lucide="shopping-bag" class="icon-xs"></i>
+            <span>Order Another Jacket</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- AUTHENTICATION / SIGN IN MODAL (Instant Demo removed as requested) -->
+  <div class="modal-overlay" id="authModal">
+    <div class="auth-card">
+      <div class="auth-card-head">
+        <div class="brand-logo">
+          <span class="brand-name">SWIFT <span>JACKETS</span></span>
+        </div>
+        <button class="close-btn" id="closeAuthModal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="auth-body" id="authFormSection">
+        <h3 class="auth-title">Welcome to Swift Society</h3>
+        <p class="auth-subtitle">Sign in to track orders, receive drop alerts, and unlock exclusive discounts.</p>
+
+        <form class="auth-form" id="loginForm" onsubmit="return false;">
+          <div class="form-group">
+            <label for="loginEmail">Email Address</label>
+            <input type="email" id="loginEmail" placeholder="Enter your email" required>
+          </div>
+          <div class="form-group">
+            <label for="loginPass">Password</label>
+            <input type="password" id="loginPass" placeholder="Enter password" required>
+          </div>
+
+          <div class="auth-options">
+            <label class="remember-checkbox">
+              <input type="checkbox" checked>
+              <span>Remember me</span>
+            </label>
+            <a href="#" class="forgot-link">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="auth-submit-btn" id="submitLoginBtn">
+            <span>Sign In to Account</span>
+            <i data-lucide="arrow-right" class="icon-xs"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- SIGNED IN VIEW -->
+      <div class="auth-body" id="authProfileSection" style="display: none;">
+        <div class="profile-avatar-circle">
+          <i data-lucide="user-check" class="icon-lg"></i>
+        </div>
+        <h3 class="auth-title" id="profileGreeting">Hello, User!</h3>
+        <p class="auth-subtitle" id="profileEmail">user@example.com</p>
+
+        <div class="profile-stats">
+          <div class="p-stat">
+            <span class="p-num" id="userOrdersCount">0</span>
+            <span class="p-lbl">Orders Placed</span>
+          </div>
+          <div class="p-stat">
+            <span class="p-num">VIP</span>
+            <span class="p-lbl">Member Tier</span>
+          </div>
+        </div>
+
+        <button class="auth-signout-btn" id="signOutBtn">
+          <i data-lucide="log-out" class="icon-xs"></i>
+          <span>Sign Out</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ABOUT US MODAL (Bas kuch words) -->
+  <div class="modal-overlay" id="aboutModal">
+    <div class="about-card">
+      <button class="close-btn" id="closeAboutModal">
+        <i data-lucide="x"></i>
+      </button>
+      <div class="about-badge">ORIGIN & PHILOSOPHY</div>
+      <h2 class="about-title">SWIFT JACKETS</h2>
+      <p class="about-lead">
+        Born at the intersection of modern alpine performance and luxury streetwear minimalism.
+      </p>
+      <p class="about-text">
+        We believe winter wear should never feel cumbersome. Every Swift Jacket is crafted with feather-density aerogel insulation, precision ergonomic quilting, and high-tenacity stormproof fabrics.
+      </p>
+      <div class="about-quote">
+        "Confidence, wrapped in warmth. Designed to elevate every silhouette without effort."
+      </div>
+      <div class="about-footer">
+        <button class="cta-primary" id="aboutCloseCta">Explore Collection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLYING CART ANIMATION CONTAINER -->
+  <div id="flyContainer"></div>
+
+  <!-- APPLICATION SCRIPTS -->
+  <script src="app.js"></script>
+</body>
+</html>
