@@ -6,23 +6,23 @@
   <title>SWIFT JACKETS — Control Hub & Admin Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="admin.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="admin-body">
+<body>
 
   <!-- ADMIN AUTHENTICATION GATE (Shown if not logged in) -->
   <div class="auth-gate-overlay" id="authGate">
     <div class="auth-gate-card">
       <div class="gate-logo">
-        <div class="brand-icon" id="gateBrandIcon">
+        <div class="brand-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
           </svg>
         </div>
-        <h2 id="gateBrandTitle">SWIFT <span>ADMIN</span></h2>
+        <h2>SWIFT <span>ADMIN</span></h2>
       </div>
       <p class="gate-subtitle">Enter your credentials to access the central store controller.</p>
 
@@ -107,49 +107,39 @@
     <!-- TOP HEADER -->
     <header class="admin-header">
       <div class="header-left">
-        <div class="brand-badge" id="adminHeaderBrandBadge">
-          <div class="brand-icon" id="adminHeaderBrandIcon">
+        <a href="index.html" class="brand-badge">
+          <div class="brand-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
             </svg>
           </div>
-          <span class="brand-name" id="adminHeaderBrandName">SWIFT <span>JACKETS</span></span>
+          <span class="brand-name">SWIFT <span>JACKETS</span></span>
           <span class="admin-pill">ADMIN CONSOLE</span>
-          <!-- QUICK BRAND CUSTOMIZE BUTTON -->
-          <button class="edit-chip-btn" id="quickEditBrandBtn" title="Customize Brand Name, Tagline & Logo">
-            <i data-lucide="edit-2" class="icon-micro"></i>
-            <span>Edit Brand</span>
-          </button>
-        </div>
+        </a>
       </div>
 
       <div class="header-center">
         <!-- NAVIGATION TABS -->
         <nav class="admin-tabs">
-          <button class="tab-btn active" data-tab="tab-visual-editor" id="tabBtnVisual">
-            <i data-lucide="sparkles" class="icon-xs"></i>
-            <span>Visual Store Editor</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-products" id="tabBtnProducts">
+          <button class="tab-btn active" data-tab="tab-products">
             <i data-lucide="package" class="icon-xs"></i>
-            <span>Jackets & Models</span>
-            <span class="tab-badge" id="modelsCountBadge">4</span>
+            <span>Products</span>
           </button>
-          <button class="tab-btn" data-tab="tab-orders" id="tabBtnOrders">
+          <button class="tab-btn" data-tab="tab-orders">
             <i data-lucide="shopping-bag" class="icon-xs"></i>
-            <span>Orders Hub</span>
+            <span>Orders</span>
             <span class="tab-badge" id="ordersCountBadge">2</span>
           </button>
-          <button class="tab-btn" data-tab="tab-customers" id="tabBtnCustomers">
+          <button class="tab-btn" data-tab="tab-customers">
             <i data-lucide="users" class="icon-xs"></i>
             <span>Customers</span>
             <span class="tab-badge" id="customersCountBadge">2</span>
           </button>
-          <button class="tab-btn" data-tab="tab-branding" id="tabBtnBranding">
+          <button class="tab-btn" data-tab="tab-branding">
             <i data-lucide="palette" class="icon-xs"></i>
             <span>Branding & Logo</span>
           </button>
-          <button class="tab-btn" data-tab="tab-security" id="tabBtnSecurity">
+          <button class="tab-btn" data-tab="tab-security">
             <i data-lucide="shield-check" class="icon-xs"></i>
             <span>Security & Pass</span>
           </button>
@@ -157,12 +147,11 @@
       </div>
 
       <div class="header-right">
-        <!-- EMERGENCY RESET TO DEFAULTS BUTTON -->
-        <button class="reset-data-btn" id="resetCatalogDefaultsBtn" title="Reset products and orders to official defaults">
+        <button class="reset-data-btn" id="resetCatalogDefaultsBtn" title="Restore factory products">
           <i data-lucide="rotate-ccw" class="icon-xs"></i>
-          <span>Reset Defaults</span>
+          <span>Reset</span>
         </button>
-        <a href="index.html" target="_blank" class="preview-site-btn" title="Open live storefront in new tab">
+        <a href="index.html" target="_blank" class="preview-site-btn" title="Open live store in new tab">
           <i data-lucide="external-link" class="icon-xs"></i>
           <span>Live Store</span>
         </a>
@@ -177,263 +166,24 @@
     <main class="admin-main">
 
       <!-- ===============================================================
-           TAB 1: VISUAL STOREFRONT EDITOR (MAIN WEBSITE LIKE EXPERIENCE WITH EDIT OPTION ON EVERYTHING)
+           TAB 1: PRODUCTS MANAGEMENT
       =============================================================== -->
-      <section class="admin-tab-content active" id="tab-visual-editor">
-        
-        <!-- VISUAL EDITOR INFO NOTICE -->
-        <div class="visual-editor-top-notice">
-          <div class="notice-left">
-            <div class="pulse-indicator"></div>
-            <div>
-              <h3 class="notice-title">Live Storefront Visual Editor</h3>
-              <p class="notice-sub">Look and feel is identical to the customer storefront. Click any <strong>[Edit]</strong> chip to change text, price, color theme, or 3D jacket model live!</p>
-            </div>
-          </div>
-          <div class="notice-actions">
-            <button class="action-primary-btn" id="visualAddJacketBtn">
-              <i data-lucide="plus" class="icon-xs"></i>
-              <span>Add New Model</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- VISUAL HERO PREVIEW CONTAINER (MIRRORS MAIN WEBSITE HERO) -->
-        <div class="visual-hero-stage-card" id="visualHeroStage">
-          
-          <!-- DYNAMIC BACKGROUND LIGHTING -->
-          <div class="visual-bg-glow" id="visualBgGlow"></div>
-
-          <!-- TOP EDITABLE STATUS STRIP -->
-          <div class="visual-top-strip">
-            <div class="strip-left">
-              <div class="collection-pill-edit-wrap">
-                <span class="pulse-dot"></span>
-                <span id="visualCollectionTag">WINTER 2026 EDITION</span>
-                <button class="edit-chip-btn micro" id="editCollectionTagBtn" title="Edit Tag">
-                  <i data-lucide="edit-2" class="icon-micro"></i>
-                </button>
-              </div>
-              <div class="hero-condition-stock-row">
-                <span class="condition-badge" id="visualConditionBadge">Brand New</span>
-                <span class="stock-badge" id="visualStockBadge">18 Available</span>
-                <button class="edit-chip-btn micro" id="quickEditStockConditionBtn" title="Quick Stock & Condition">
-                  <i data-lucide="sliders" class="icon-micro"></i>
-                  <span>Adjust</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="strip-right">
-              <div class="carousel-counter">
-                <span id="visualCurrentSlideNum">01</span>
-                <span class="divider">/</span>
-                <span class="total" id="visualTotalSlidesNum">04</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- MAIN VISUAL HERO GRID (LEFT, CENTER, RIGHT) -->
-          <div class="visual-hero-grid">
-
-            <!-- LEFT: EDITORIAL COPY & HEADLINES -->
-            <div class="visual-col-left">
-              <div class="editable-block">
-                <div class="editable-header">
-                  <span class="block-label">Hero Headlines</span>
-                  <button class="edit-chip-btn" id="editHeadlinesBtn">
-                    <i data-lucide="edit-3" class="icon-micro"></i>
-                    <span>Edit Headline</span>
-                  </button>
-                </div>
-                <h1 class="visual-main-headline">
-                  <span id="visualHeadlineMain">Stand out</span><br>
-                  <span class="headline-light" id="visualHeadlineSub">Without trying</span>
-                </h1>
-              </div>
-
-              <div class="editable-block" style="margin-top: 1.2rem;">
-                <div class="editable-header">
-                  <span class="block-label">Product Story / Description</span>
-                  <button class="edit-chip-btn" id="editDescriptionBtn">
-                    <i data-lucide="edit-3" class="icon-micro"></i>
-                    <span>Edit Story</span>
-                  </button>
-                </div>
-                <p class="visual-description" id="visualProductDesc">
-                  It's not just about staying warm, it's about stepping outside and instantly feeling confident, comfortable, and completely yourself. Designed to elevate even the simplest outfit, this jacket wraps you in lightweight warmth.
-                </p>
-              </div>
-
-              <div class="editable-block" style="margin-top: 1.2rem;">
-                <div class="editable-header">
-                  <span class="block-label">Tech Specs Badge</span>
-                  <button class="edit-chip-btn" id="editTechBadgeBtn">
-                    <i data-lucide="edit-3" class="icon-micro"></i>
-                    <span>Edit Tech</span>
-                  </button>
-                </div>
-                <div class="tech-tag" id="visualTechTag">
-                  <i data-lucide="wind" class="icon-xs"></i>
-                  <span id="visualTechText">Aerogel 850+ Fill</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- CENTER: 3D ROTATING JACKET SHOWCASE -->
-            <div class="visual-col-center">
-              
-              <!-- NAVIGATION CHEVRONS -->
-              <button class="visual-arrow-btn prev" id="visualPrevJacketBtn" title="Previous Model">
-                <i data-lucide="chevron-left"></i>
-              </button>
-
-              <div class="visual-jacket-platform">
-                <div class="visual-ambient-ring" id="visualAmbientRing"></div>
-              </div>
-
-              <!-- JACKET FRAME WITH 3D ROTATION -->
-              <div class="visual-jacket-frame" id="visualJacketFrame" title="Drag to 3D rotate preview">
-                <img 
-                  src="assets/images/jacket_orange.png" 
-                  alt="Swift Jacket" 
-                  class="visual-jacket-img" 
-                  id="visualMainJacketImg"
-                >
-                <div class="visual-jacket-shadow" id="visualJacketShadow"></div>
-
-                <!-- FLOATING EDIT BADGE DIRECTLY ON JACKET -->
-                <button class="floating-jacket-edit-btn" id="editCurrentJacketBtn" title="Edit this jacket model, color, sizes & 3D image">
-                  <i data-lucide="edit" class="icon-xs"></i>
-                  <span>Edit This Jacket</span>
-                </button>
-              </div>
-
-              <button class="visual-arrow-btn next" id="visualNextJacketBtn" title="Next Model">
-                <i data-lucide="chevron-right"></i>
-              </button>
-
-              <!-- CENTER TAGLINE -->
-              <div class="visual-center-tagline" id="visualCenterTagline">
-                <div class="tagline-flex">
-                  <span class="quote-line"></span>
-                  <p id="visualTaglineText">Confidence, wrapped in warmth</p>
-                  <span class="quote-line"></span>
-                  <button class="edit-chip-btn micro" id="editTaglineBtn" title="Edit Tagline">
-                    <i data-lucide="edit-2" class="icon-micro"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- RIGHT: PRICING, THEME COLOR WHEEL & SIZES -->
-            <div class="visual-col-right">
-              
-              <!-- PRICE & STOCK CARD -->
-              <div class="visual-price-card">
-                <div class="price-header">
-                  <span class="color-indicator-name" id="visualColorName">Solar Ember</span>
-                  <span class="discount-badge" id="visualDiscountBadge">Save 25%</span>
-                  <button class="edit-chip-btn micro" id="editPriceCardBtn" title="Edit Price & Discount">
-                    <i data-lucide="edit-2" class="icon-micro"></i>
-                    <span>Edit</span>
-                  </button>
-                </div>
-                <div class="price-values">
-                  <span class="current-price" id="visualCurrentPrice">PKR 14,999</span>
-                  <span class="original-price" id="visualOriginalPrice">PKR 19,999</span>
-                </div>
-              </div>
-
-              <!-- COLORWAY SELECTOR SWATCHES -->
-              <div class="visual-selector-block">
-                <div class="selector-header-row">
-                  <label class="selector-label">Jacket Colorways:</label>
-                  <button class="edit-chip-btn micro" id="visualManageColorsBtn" title="Manage Jacket Colors">
-                    <i data-lucide="palette" class="icon-micro"></i>
-                    <span>Manage</span>
-                  </button>
-                </div>
-                <div class="visual-swatches-grid" id="visualSwatchesGrid">
-                  <!-- Rendered dynamically -->
-                </div>
-              </div>
-
-              <!-- EMBEDDED COLOR WHEEL & LIVE THEME CONTROLLER -->
-              <div class="visual-color-wheel-box">
-                <div class="wheel-box-title">
-                  <i data-lucide="disc" class="icon-xs" style="color: var(--admin-primary);"></i>
-                  <span>Live Dynamic Background Theme</span>
-                </div>
-                <p class="wheel-box-desc">Drag the wheel to transform the live store theme background color instantly!</p>
-                
-                <div class="mini-wheel-flex">
-                  <div class="mini-wheel-canvas-wrap">
-                    <canvas id="visualColorWheelCanvas" width="130" height="130"></canvas>
-                    <div class="wheel-selector-dot" id="visualWheelDot"></div>
-                  </div>
-                  <div class="mini-wheel-data">
-                    <div class="color-preview-pill">
-                      <span class="preview-dot" id="visualWheelPreviewDot" style="background: #ff6a2b;"></span>
-                      <input type="text" id="visualThemeHexInput" value="#ff6a2b" class="mini-hex-input">
-                    </div>
-                    <button class="action-primary-btn mini" id="saveActiveThemeColorBtn" title="Apply this color to the active jacket and live storefront">
-                      <i data-lucide="check" class="icon-micro"></i>
-                      <span>Apply Theme</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- SIZE OPTIONS -->
-              <div class="visual-selector-block" style="margin-top: 1.2rem;">
-                <div class="selector-header-row">
-                  <label class="selector-label">Sizes Available:</label>
-                  <button class="edit-chip-btn micro" id="visualEditSizesBtn" title="Toggle Size Availability">
-                    <i data-lucide="check-square" class="icon-micro"></i>
-                    <span>Edit Sizes</span>
-                  </button>
-                </div>
-                <div class="size-options" id="visualSizeOptions">
-                  <button class="size-pill active" data-size="36">36</button>
-                  <button class="size-pill active" data-size="38">38</button>
-                  <button class="size-pill active" data-size="40">40</button>
-                  <button class="size-pill active" data-size="42">42</button>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-
-      </section>
-
-      <!-- ===============================================================
-           TAB 2: PRODUCTS & INVENTORY MANAGEMENT (ADVANCED)
-      =============================================================== -->
-      <section class="admin-tab-content" id="tab-products">
+      <section class="admin-tab-content active" id="tab-products">
         <div class="section-top-bar">
           <div>
-            <h1 class="page-title">Jackets & Inventory Hub</h1>
-            <p class="page-subtitle">Manage jackets, live stock quantities, conditions, sizes, and dynamic 3D backgrounds.</p>
+            <h1 class="page-title">Products & Inventory</h1>
+            <p class="page-subtitle">Add, edit, remove jacket models, adjust stock, condition, and customize 3D background themes.</p>
           </div>
-          <div class="top-bar-buttons">
-            <button class="action-secondary-btn" id="refreshProductsBtn">
-              <i data-lucide="refresh-cw" class="icon-xs"></i>
-              <span>Refresh</span>
-            </button>
-            <button class="action-primary-btn" id="openAddProductModal">
-              <i data-lucide="plus-circle" class="icon-sm"></i>
-              <span>Add New Jacket</span>
-            </button>
-          </div>
+          <button class="action-primary-btn" id="openAddProductModal">
+            <i data-lucide="plus-circle" class="icon-sm"></i>
+            <span>Add New Jacket</span>
+          </button>
         </div>
 
         <!-- STATS OVERVIEW -->
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="stat-icon-wrap" style="color: #ff6a2b; background: rgba(255, 106, 43, 0.12);">
+            <div class="stat-icon-wrap" style="color: #ff6a2b;">
               <i data-lucide="layers"></i>
             </div>
             <div>
@@ -442,7 +192,7 @@
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon-wrap" style="color: #10b981; background: rgba(16, 185, 129, 0.12);">
+            <div class="stat-icon-wrap" style="color: #10b981;">
               <i data-lucide="package-check"></i>
             </div>
             <div>
@@ -451,7 +201,7 @@
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon-wrap" style="color: #38bdf8; background: rgba(56, 189, 248, 0.12);">
+            <div class="stat-icon-wrap" style="color: #38bdf8;">
               <i data-lucide="trending-up"></i>
             </div>
             <div>
@@ -460,27 +210,13 @@
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon-wrap" style="color: #f43f5e; background: rgba(244, 63, 94, 0.12);">
+            <div class="stat-icon-wrap" style="color: #f43f5e;">
               <i data-lucide="sparkles"></i>
             </div>
             <div>
               <span class="stat-label">Store Sync</span>
-              <h3 class="stat-val text-success">Live & Connected</h3>
+              <h3 class="stat-val text-success">Real-time</h3>
             </div>
-          </div>
-        </div>
-
-        <!-- FILTER & SEARCH BAR -->
-        <div class="search-filter-bar">
-          <div class="search-input-wrap">
-            <i data-lucide="search" class="icon-xs search-icon"></i>
-            <input type="text" id="productsSearchInput" placeholder="Search jackets by model name, color, tag, or size...">
-          </div>
-          <div class="filter-pills-row">
-            <button class="filter-pill active" data-filter="all">All Jackets</button>
-            <button class="filter-pill" data-filter="brand-new">Brand New</button>
-            <button class="filter-pill" data-filter="in-stock">In Stock (>0)</button>
-            <button class="filter-pill" data-filter="low-stock">Low Stock (≤10)</button>
           </div>
         </div>
 
@@ -493,7 +229,7 @@
                 <th>Colorway & Theme</th>
                 <th>Condition</th>
                 <th>Price (PKR)</th>
-                <th>Stock / Quick Adjust</th>
+                <th>Inventory Status</th>
                 <th>Sizes Available</th>
                 <th style="text-align: right;">Actions</th>
               </tr>
@@ -506,13 +242,13 @@
       </section>
 
       <!-- ===============================================================
-           TAB 3: ORDERS MANAGEMENT (ADVANCED WITH WHATSAPP & STATUS TABS)
+           TAB 2: ORDERS MANAGEMENT
       =============================================================== -->
       <section class="admin-tab-content" id="tab-orders">
         <div class="section-top-bar">
           <div>
-            <h1 class="page-title">Customer Orders Hub</h1>
-            <p class="page-subtitle">Inspect orders, reply directly to customer WhatsApp, and update shipment status.</p>
+            <h1 class="page-title">Customer Orders</h1>
+            <p class="page-subtitle">Track incoming orders, inspect customer delivery information, and update live status.</p>
           </div>
           <button class="action-secondary-btn" id="refreshOrdersBtn">
             <i data-lucide="refresh-cw" class="icon-xs"></i>
@@ -520,53 +256,17 @@
           </button>
         </div>
 
-        <!-- ORDER STATUS TABS -->
-        <div class="order-tabs-row">
-          <button class="order-filter-pill active" data-status="all">
-            <span>All Orders</span>
-            <span class="pill-count" id="countAllOrders">2</span>
-          </button>
-          <button class="order-filter-pill" data-status="Pending">
-            <span>⏳ Pending</span>
-            <span class="pill-count" id="countPendingOrders">1</span>
-          </button>
-          <button class="order-filter-pill" data-status="Processing">
-            <span>🔄 Processing</span>
-            <span class="pill-count" id="countProcessingOrders">0</span>
-          </button>
-          <button class="order-filter-pill" data-status="Shipped">
-            <span>🚚 Shipped</span>
-            <span class="pill-count" id="countShippedOrders">1</span>
-          </button>
-          <button class="order-filter-pill" data-status="Delivered">
-            <span>✅ Delivered</span>
-            <span class="pill-count" id="countDeliveredOrders">0</span>
-          </button>
-          <button class="order-filter-pill" data-status="Cancelled">
-            <span>❌ Cancelled</span>
-            <span class="pill-count" id="countCancelledOrders">0</span>
-          </button>
-        </div>
-
-        <!-- ORDERS SEARCH BAR -->
-        <div class="search-filter-bar">
-          <div class="search-input-wrap">
-            <i data-lucide="search" class="icon-xs search-icon"></i>
-            <input type="text" id="ordersSearchInput" placeholder="Search orders by Order ID, customer name, phone, or city...">
-          </div>
-        </div>
-
         <div class="products-table-container">
           <table class="custom-table" id="ordersTable">
             <thead>
               <tr>
                 <th>Order ID & Date</th>
-                <th>Customer & WhatsApp</th>
+                <th>Customer & Contact</th>
                 <th>Delivery Address</th>
                 <th>Item Purchased</th>
-                <th>Total (PKR)</th>
+                <th>Total Paid (PKR)</th>
                 <th>Status Controller</th>
-                <th style="text-align: right;">Actions</th>
+                <th style="text-align: right;">Delete</th>
               </tr>
             </thead>
             <tbody id="ordersTableBody">
@@ -575,64 +275,25 @@
           </table>
           <div class="empty-state-notice" id="noOrdersNotice" style="display: none;">
             <i data-lucide="inbox" class="icon-lg"></i>
-            <h4>No Matching Orders Found</h4>
-            <p>Incoming customer orders will appear here in real-time as they are placed on the storefront.</p>
+            <h4>No Orders Placed Yet</h4>
+            <p>When customers complete checkout in the main store, their orders will appear here in real-time.</p>
           </div>
         </div>
       </section>
 
       <!-- ===============================================================
-           TAB 4: CUSTOMERS REGISTRY (ADVANCED WITH SEARCH & LIFETIME SPEND)
+           TAB 3: CUSTOMERS SECTION
       =============================================================== -->
       <section class="admin-tab-content" id="tab-customers">
         <div class="section-top-bar">
           <div>
             <h1 class="page-title">Registered Customers</h1>
-            <p class="page-subtitle">Profiles of registered customers, lifetime spend, order history, and direct WhatsApp contact.</p>
+            <p class="page-subtitle">Complete registry of customers who signed in or placed orders on the platform.</p>
           </div>
           <button class="action-secondary-btn" id="refreshCustomersBtn">
             <i data-lucide="refresh-cw" class="icon-xs"></i>
             <span>Refresh Customers</span>
           </button>
-        </div>
-
-        <!-- CUSTOMERS STATS STRIP -->
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon-wrap" style="color: #38bdf8; background: rgba(56, 189, 248, 0.12);">
-              <i data-lucide="users"></i>
-            </div>
-            <div>
-              <span class="stat-label">Registered Accounts</span>
-              <h3 class="stat-val" id="statCustomersCount">2</h3>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon-wrap" style="color: #10b981; background: rgba(16, 185, 129, 0.12);">
-              <i data-lucide="wallet"></i>
-            </div>
-            <div>
-              <span class="stat-label">Total Store Revenue</span>
-              <h3 class="stat-val" id="statTotalRevenue">PKR 33,998</h3>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon-wrap" style="color: #f59e0b; background: rgba(245, 158, 11, 0.12);">
-              <i data-lucide="award"></i>
-            </div>
-            <div>
-              <span class="stat-label">Average Order Value</span>
-              <h3 class="stat-val" id="statAvgOrderValue">PKR 16,999</h3>
-            </div>
-          </div>
-        </div>
-
-        <!-- SEARCH BAR -->
-        <div class="search-filter-bar">
-          <div class="search-input-wrap">
-            <i data-lucide="search" class="icon-xs search-icon"></i>
-            <input type="text" id="customersSearchInput" placeholder="Search customers by name, phone, email, or city...">
-          </div>
         </div>
 
         <div class="products-table-container">
@@ -641,11 +302,10 @@
               <tr>
                 <th>Customer Name</th>
                 <th>Email Address</th>
-                <th>Phone Number & WhatsApp</th>
+                <th>Phone Number</th>
                 <th>City / Region</th>
                 <th>Joined Date</th>
                 <th>Lifetime Orders</th>
-                <th style="text-align: right;">Total Spent</th>
               </tr>
             </thead>
             <tbody id="customersTableBody">
@@ -654,187 +314,80 @@
           </table>
           <div class="empty-state-notice" id="noCustomersNotice" style="display: none;">
             <i data-lucide="users" class="icon-lg"></i>
-            <h4>No Customers Found</h4>
-            <p>Customers who register or place orders on the storefront will appear here.</p>
+            <h4>No Customer Profiles Yet</h4>
+            <p>Customers who sign in or place an order on the storefront will be listed here automatically.</p>
           </div>
         </div>
       </section>
 
       <!-- ===============================================================
-           TAB 5: BRANDING, LOGO & STORE SETTINGS (CUSTOMIZE BRAND NAME & LOGO)
+           TAB 4: BRANDING & LOGO SETTINGS
       =============================================================== -->
       <section class="admin-tab-content" id="tab-branding">
         <div class="section-top-bar">
           <div>
-            <h1 class="page-title">Brand & Storefront Identity</h1>
-            <p class="page-subtitle">Customize store name, brand logo, tagline, customer support contact, and global branding.</p>
+            <h1 class="page-title">Brand & Logo Settings</h1>
+            <p class="page-subtitle">Customize brand name, logo icon, tagline, and customer support contact.</p>
           </div>
         </div>
 
-        <div class="branding-settings-grid">
-          <!-- LEFT CARD: BRANDING FORM -->
-          <div class="security-card" style="max-width: 100%;">
-            <div class="security-header">
-              <div class="sec-icon-ring" style="background: rgba(255, 106, 43, 0.15); border-color: rgba(255, 106, 43, 0.4);">
-                <i data-lucide="palette" class="icon-md" style="color: #ff6a2b;"></i>
+        <div class="security-card" style="max-width: 680px;">
+          <form id="brandSettingsForm" onsubmit="return false;" class="security-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="brandNameInput">Brand Main Name</label>
+                <input type="text" id="brandNameInput" value="SWIFT" required>
               </div>
-              <div>
-                <h3>Storefront Identity Settings</h3>
-                <p class="sec-desc">Changes made here update both the main website and admin panel instantaneously.</p>
+              <div class="form-group">
+                <label for="brandSuffixInput">Brand Accent / Suffix</label>
+                <input type="text" id="brandSuffixInput" value="JACKETS" required>
               </div>
             </div>
 
-            <form id="brandSettingsForm" onsubmit="return false;" class="security-form">
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="brandNameInput">Brand Main Name *</label>
-                  <input type="text" id="brandNameInput" value="SWIFT" placeholder="e.g. SWIFT" required>
-                </div>
-                <div class="form-group">
-                  <label for="brandSuffixInput">Brand Suffix / Accent *</label>
-                  <input type="text" id="brandSuffixInput" value="JACKETS" placeholder="e.g. JACKETS" required>
-                </div>
-              </div>
+            <div class="form-group">
+              <label for="brandTaglineInput">Main Store Tagline</label>
+              <input type="text" id="brandTaglineInput" value="Confidence, wrapped in warmth" required>
+            </div>
 
+            <div class="form-row">
               <div class="form-group">
-                <label for="brandTaglineInput">Main Store Tagline *</label>
-                <input type="text" id="brandTaglineInput" value="Confidence, wrapped in warmth" placeholder="e.g. Confidence, wrapped in warmth" required>
+                <label for="supportAgentInput">Support Agent Name</label>
+                <input type="text" id="supportAgentInput" value="ALIZOX" required>
               </div>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="brandHeadlineMainInput">Hero Primary Headline</label>
-                  <input type="text" id="brandHeadlineMainInput" value="Stand out" placeholder="e.g. Stand out">
-                </div>
-                <div class="form-group">
-                  <label for="brandHeadlineSubInput">Hero Secondary Headline</label>
-                  <input type="text" id="brandHeadlineSubInput" value="Without trying" placeholder="e.g. Without trying">
-                </div>
-              </div>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="supportAgentInput">Customer Support Agent Name</label>
-                  <input type="text" id="supportAgentInput" value="ALIZOX" placeholder="e.g. ALIZOX" required>
-                </div>
-                <div class="form-group">
-                  <label for="supportPhoneInput">Customer Support WhatsApp Number (Hidden from plain text)</label>
-                  <input type="text" id="supportPhoneInput" value="03079436896" placeholder="03079436896" required>
-                </div>
-              </div>
-
-              <!-- BRAND LOGO SELECTOR & UPLOAD -->
               <div class="form-group">
-                <label>Brand Logo Icon Style *</label>
-                <div class="logo-styles-grid">
-                  <label class="logo-style-item">
-                    <input type="radio" name="logoStyleChoice" value="thunderbolt" checked>
-                    <div class="logo-choice-box">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                      </svg>
-                      <span>Thunderbolt</span>
-                    </div>
-                  </label>
-
-                  <label class="logo-style-item">
-                    <input type="radio" name="logoStyleChoice" value="diamond">
-                    <div class="logo-choice-box">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
-                        <path d="M6 3h12l4 6-10 13L2 9z"></path>
-                      </svg>
-                      <span>Gem Diamond</span>
-                    </div>
-                  </label>
-
-                  <label class="logo-style-item">
-                    <input type="radio" name="logoStyleChoice" value="crown">
-                    <div class="logo-choice-box">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
-                        <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path>
-                      </svg>
-                      <span>Luxury Crown</span>
-                    </div>
-                  </label>
-
-                  <label class="logo-style-item">
-                    <input type="radio" name="logoStyleChoice" value="flame">
-                    <div class="logo-choice-box">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
-                        <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
-                      </svg>
-                      <span>Solar Flame</span>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- CUSTOM LOGO IMAGE UPLOAD (OPTIONAL) -->
-              <div class="form-group">
-                <label>Or Upload Custom Brand Logo Image (PNG / SVG)</label>
-                <div class="logo-upload-row">
-                  <div class="logo-preview-box" id="brandLogoPreviewBox">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" id="brandLogoSvgPreview">
-                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                    </svg>
-                  </div>
-                  <label class="btn-file-upload">
-                    <i data-lucide="upload" class="icon-xs"></i>
-                    <span>Upload Logo Image</span>
-                    <input type="file" id="customLogoFileInput" accept="image/*" style="display: none;">
-                  </label>
-                  <button type="button" class="btn-cancel" id="resetLogoToIconBtn">Use Icon</button>
-                </div>
-              </div>
-
-              <div class="form-actions" style="margin-top: 1.5rem;">
-                <button type="submit" class="action-primary-btn" id="saveBrandSettingsBtn">
-                  <i data-lucide="check" class="icon-xs"></i>
-                  <span>Save Brand Settings & Sync</span>
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <!-- RIGHT CARD: LIVE BRAND PREVIEW -->
-          <div class="brand-preview-card">
-            <h4 class="preview-title">Live Storefront Header Preview</h4>
-            <div class="mock-navbar">
-              <div class="mock-brand">
-                <div class="brand-icon" id="mockPreviewIcon">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                  </svg>
-                </div>
-                <span class="brand-name" id="mockPreviewBrandName">SWIFT <span>JACKETS</span></span>
-              </div>
-              <div class="mock-pill">PUFFER JACKET</div>
-              <div class="mock-user">
-                <i data-lucide="user" class="icon-xs"></i>
-                <i data-lucide="shopping-bag" class="icon-xs"></i>
+                <label for="supportPhoneInput">Support WhatsApp Number (03079436896)</label>
+                <input type="text" id="supportPhoneInput" value="03079436896" required>
               </div>
             </div>
 
-            <div class="mock-hero-preview">
-              <div class="mock-tagline" id="mockPreviewTagline">"Confidence, wrapped in warmth"</div>
-              <div class="mock-headline" id="mockPreviewHeadline">Stand out <span>Without trying</span></div>
-              <div class="mock-agent-pill">
-                <i data-lucide="message-circle" class="icon-micro"></i>
-                <span>Support: <strong id="mockPreviewAgent">ALIZOX</strong> (WhatsApp Direct)</span>
+            <div class="form-group">
+              <label>Logo Style Choice</label>
+              <div style="display: flex; gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                <label><input type="radio" name="logoChoice" value="thunderbolt" checked> ⚡ Thunderbolt</label>
+                <label><input type="radio" name="logoChoice" value="diamond"> 💎 Diamond</label>
+                <label><input type="radio" name="logoChoice" value="crown"> 👑 Crown</label>
+                <label><input type="radio" name="logoChoice" value="flame"> 🔥 Flame</label>
               </div>
             </div>
-          </div>
+
+            <div class="form-actions" style="margin-top: 1rem;">
+              <button type="submit" class="action-primary-btn" id="saveBrandBtn">
+                <i data-lucide="check" class="icon-xs"></i>
+                <span>Save Brand Settings</span>
+              </button>
+            </div>
+          </form>
         </div>
       </section>
 
       <!-- ===============================================================
-           TAB 6: SECURITY & CREDENTIALS (OTP VERIFICATION)
+           TAB 5: SECURITY & CREDENTIALS (OTP VERIFICATION)
       =============================================================== -->
       <section class="admin-tab-content" id="tab-security">
         <div class="section-top-bar">
           <div>
             <h1 class="page-title">Admin Credentials & Security</h1>
-            <p class="page-subtitle">Update your admin username and password securely via OTP verification to aliloveff500@gmail.com.</p>
+            <p class="page-subtitle">Update your admin username and password securely via OTP verification.</p>
           </div>
         </div>
 
@@ -1102,25 +655,6 @@
           </button>
         </div>
       </form>
-    </div>
-  </div>
-
-  <!-- QUICK EDIT TEXT MODAL (FOR HEADLINES, TAGLINES, STORY) -->
-  <div class="admin-modal-overlay" id="quickEditModal">
-    <div class="quick-modal-card">
-      <div class="modal-head">
-        <h3 id="quickModalTitle">Quick Edit</h3>
-        <button class="modal-close-btn" id="closeQuickModalBtn">
-          <i data-lucide="x"></i>
-        </button>
-      </div>
-      <div class="quick-modal-body" id="quickModalBody">
-        <!-- Rendered dynamically -->
-      </div>
-      <div class="modal-foot">
-        <button type="button" class="btn-cancel" id="cancelQuickModalBtn">Cancel</button>
-        <button type="button" class="action-primary-btn" id="saveQuickModalBtn">Save Changes</button>
-      </div>
     </div>
   </div>
 
