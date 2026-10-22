@@ -1044,9 +1044,52 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 17. REAL-TIME STORAGE & BROADCAST SYNC (Instant updates from Admin Panel)
+  function applyBrandSettings() {
+    try {
+      const raw = localStorage.getItem('swift_brand_settings');
+      if (!raw) return;
+      const b = JSON.parse(raw);
+      
+      // Update brand name
+      const brandNameEls = document.querySelectorAll('.brand-name');
+      brandNameEls.forEach(el => {
+        el.innerHTML = `${b.brandName || 'SWIFT'} <span>${b.brandSuffix || 'JACKETS'}</span>`;
+      });
+
+      // Update brand logo icon
+      const brandIconEls = document.querySelectorAll('.brand-icon');
+      brandIconEls.forEach(el => {
+        if (b.logoCustomUrl) {
+          el.innerHTML = `<img src="${b.logoCustomUrl}" alt="Logo" style="width:22px;height:22px;object-fit:contain;">`;
+        } else if (b.logoChoice === 'diamond') {
+          el.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M6 3h12l4 6-10 13L2 9z"></path></svg>`;
+        } else if (b.logoChoice === 'crown') {
+          el.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path></svg>`;
+        } else if (b.logoChoice === 'flame') {
+          el.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>`;
+        } else {
+          el.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
+        }
+      });
+
+      // Update customer support link
+      const custSupportLink = document.getElementById('customerSupportLink');
+      if (custSupportLink) {
+        const rawPhone = b.supportPhone || '03079436896';
+        let cleanPhone = rawPhone.replace(/\D/g, '');
+        if (cleanPhone.startsWith('03')) cleanPhone = '92' + cleanPhone.substring(1);
+        const msg = encodeURIComponent(`Hello ${b.supportAgent || 'ALIZOX'}, I need assistance regarding Swift Jackets.`);
+        custSupportLink.href = `https://wa.me/${cleanPhone}?text=${msg}`;
+      }
+    } catch (e) {
+      console.warn('Non-fatal brand settings error:', e);
+    }
+  }
+
   function reloadStoreFromStorage() {
     products = getLiveProducts();
     ordersList = JSON.parse(localStorage.getItem('swift_jackets_orders') || '[]');
+    applyBrandSettings();
     initColorSwatches();
     if (currentIndex >= products.length) currentIndex = 0;
     const currentProd = products[currentIndex];
@@ -1076,6 +1119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 18. INITIALIZE APPLICATION
+  applyBrandSettings();
   initColorSwatches();
   applyProductTheme(products[0]);
   updateEditorialContent(products[0]);
