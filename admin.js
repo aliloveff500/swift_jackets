@@ -125,6 +125,18 @@ document.addEventListener('DOMContentLoaded', () => {
   let adminAuth = JSON.parse(localStorage.getItem('swift_admin_auth'));
   let activeOtpCode = null;
 
+  // Real-time Cross-Tab Broadcast Channel (for instant sync between storefront and admin)
+  const syncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('swift_jackets_sync') : null;
+
+  function broadcastChange(type, data = {}) {
+    window.dispatchEvent(new Event('storage'));
+    if (syncChannel) {
+      try {
+        syncChannel.postMessage({ type, data, timestamp: Date.now() });
+      } catch (err) {}
+    }
+  }
+
   // 3. AUTHENTICATION CONTROLLER
   const authGate = document.getElementById('authGate');
   const adminWrapper = document.getElementById('adminWrapper');
@@ -134,8 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginErrorMsg = document.getElementById('loginErrorMsg');
   const adminLogoutBtn = document.getElementById('adminLogoutBtn');
 
-  // Check Session
-  if (sessionStorage.getItem('swift_admin_logged_in') === 'true') {
+  // Check Persistent or Session Login
+  if (localStorage.getItem('swift_admin_logged_in') === 'true' || sessionStorage.getItem('swift_admin_logged_in') === 'true') {
     showAdminDashboard();
   } else {
     showAuthGate();
@@ -167,7 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
     adminAuth = JSON.parse(localStorage.getItem('swift_admin_auth'));
     if (u === adminAuth.username && p === adminAuth.password) {
       sessionStorage.setItem('swift_admin_logged_in', 'true');
+      localStorage.setItem('swift_admin_logged_in', 'true');
       showAdminDashboard();
+      broadcastChange('ADMIN_AUTH');
     } else {
       loginErrorMsg.style.display = 'block';
       gsap.fromTo(loginErrorMsg, { x: -8 }, { x: 8, duration: 0.1, repeat: 3, yoyo: true });
@@ -176,8 +190,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   adminLogoutBtn.addEventListener('click', () => {
     sessionStorage.removeItem('swift_admin_logged_in');
+    localStorage.removeItem('swift_admin_logged_in');
     showAuthGate();
+    broadcastChange('ADMIN_LOGOUT');
   });
+
+  if (syncChannel) {
+    syncChannel.onmessage = (event) => {
+      orders = JSON.parse(localStorage.getItem('swift_jackets_orders') || '[]');
+      customers = JSON.parse(localStorage.getItem('swift_jackets_customers') || '[]');
+      renderOrdersTable();
+      renderCustomersTable();
+      updateBadges();
+    };
+  }
 
   // 4. TAB NAVIGATION
   const tabBtns = document.querySelectorAll('.tab-btn');
@@ -485,8 +511,8 @@ document.addEventListener('DOMContentLoaded', () => {
     updateBadges();
     closeProdModal();
 
-    // Trigger storage event for other open tabs
-    window.dispatchEvent(new Event('storage'));
+    // Trigger instant broadcast sync to live storefront
+    broadcastChange('PRODUCTS_UPDATED');
   });
 
   // Delete Product
@@ -500,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('swift_jackets_products', JSON.stringify(products));
       renderProductsTable();
       updateBadges();
-      window.dispatchEvent(new Event('storage'));
+      broadcastChange('PRODUCTS_UPDATED');
     }
   }
 
@@ -578,7 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newStatus = e.target.value;
         orders[index].status = newStatus;
         localStorage.setItem('swift_jackets_orders', JSON.stringify(orders));
-        window.dispatchEvent(new Event('storage'));
+        broadcastChange('ORDER_STATUS_CHANGED', { orderId: ord.orderId, status: newStatus });
       });
 
       // Delete Order listener
@@ -588,7 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
           localStorage.setItem('swift_jackets_orders', JSON.stringify(orders));
           renderOrdersTable();
           updateBadges();
-          window.dispatchEvent(new Event('storage'));
+          broadcastChange('ORDERS_UPDATED');
         }
       });
 

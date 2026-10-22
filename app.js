@@ -802,6 +802,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Trigger cross-tab sync
     window.dispatchEvent(new Event('storage'));
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const ch = new BroadcastChannel('swift_jackets_sync');
+        ch.postMessage({ type: 'NEW_ORDER', orderId, timestamp: Date.now() });
+      } catch (err) {}
+    }
 
     // Smooth transition
     gsap.to(cartCheckoutView, {
@@ -938,6 +944,12 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       localStorage.setItem('swift_jackets_customers', JSON.stringify(customersList));
       window.dispatchEvent(new Event('storage'));
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const ch = new BroadcastChannel('swift_jackets_sync');
+          ch.postMessage({ type: 'NEW_CUSTOMER', timestamp: Date.now() });
+        } catch (err) {}
+      }
     }
 
     updateAuthModalState();
@@ -981,8 +993,8 @@ document.addEventListener('DOMContentLoaded', () => {
     addToCartBtn.click();
   });
 
-  // 17. REAL-TIME STORAGE SYNC (Cross-tab updates from Admin Panel)
-  window.addEventListener('storage', () => {
+  // 17. REAL-TIME STORAGE & BROADCAST SYNC (Instant updates from Admin Panel)
+  function reloadStoreFromStorage() {
     products = getLiveProducts();
     ordersList = JSON.parse(localStorage.getItem('swift_jackets_orders') || '[]');
     initColorSwatches();
@@ -991,7 +1003,27 @@ document.addEventListener('DOMContentLoaded', () => {
     applyProductTheme(currentProd);
     updateEditorialContent(currentProd);
     updateSizeAvailability(currentProd);
-  });
+
+    // Update active cart order status in live view if present
+    if (placedOrderId && placedOrderStatus) {
+      const activeId = placedOrderId.textContent.trim();
+      const match = ordersList.find(o => o.orderId === activeId);
+      if (match) {
+        placedOrderStatus.textContent = match.status;
+      }
+    }
+  }
+
+  window.addEventListener('storage', reloadStoreFromStorage);
+
+  if (typeof BroadcastChannel !== 'undefined') {
+    try {
+      const liveSyncChannel = new BroadcastChannel('swift_jackets_sync');
+      liveSyncChannel.onmessage = (event) => {
+        reloadStoreFromStorage();
+      };
+    } catch (err) {}
+  }
 
   // 18. INITIALIZE APPLICATION
   initColorSwatches();

@@ -251,6 +251,20 @@ html, body {
   transform: translateY(-2px);
 }
 
+.admin-link-btn {
+  background: rgba(255, 106, 43, 0.14);
+  border: 1px solid rgba(255, 106, 43, 0.38);
+  color: #ff8c5a;
+  text-decoration: none;
+}
+
+.admin-link-btn:hover {
+  background: rgba(255, 106, 43, 0.28);
+  border-color: #ff6a2b;
+  color: #fff;
+  box-shadow: 0 0 16px rgba(255, 106, 43, 0.4);
+}
+
 .cart-btn {
   padding: 0.6rem 0.9rem;
   position: relative;
