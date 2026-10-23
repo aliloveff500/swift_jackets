@@ -3,7 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SWIFT JACKETS — Stand Out Without Trying</title>
+  <title>SWIFT JACKETS — Stand Out Without Trying | Luxury Outerwear</title>
+  
+  <!-- SEARCH ENGINE OPTIMIZATION & GOOGLE VERIFICATION -->
+  <meta name="description" content="SWIFT JACKETS — Luxury alpine performance meets minimalist streetwear. Feather-density aerogel insulation, stormproof ripstop shells, and sculpted modern aesthetics. Free delivery across Pakistan.">
+  <meta name="keywords" content="swift jackets, luxury jackets, puffer jacket, alpine outerwear, winter jackets Pakistan, designer jackets, aerogel jacket">
+  <meta name="author" content="SWIFT JACKETS — ALIZOX">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="theme-color" content="#ff6a2b">
+  <meta name="google-site-verification" content="google-site-verification-token">
+  <link rel="canonical" href="https://swiftjackets.vercel.app/">
+
+  <!-- OPEN GRAPH / FACEBOOK / WHATSAPP -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://swiftjackets.vercel.app/">
+  <meta property="og:title" content="SWIFT JACKETS — Stand Out Without Trying">
+  <meta property="og:description" content="Luxury alpine performance meets streetwear minimalism. Aerogel insulation, stormproof fabrics, sculpted warmth.">
+  <meta property="og:image" content="https://swiftjackets.vercel.app/assets/images/jacket_orange.png">
+  <meta property="og:site_name" content="SWIFT JACKETS">
+
+  <!-- TWITTER CARDS -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SWIFT JACKETS — Luxury Outerwear">
+  <meta name="twitter:description" content="Confidence, wrapped in warmth. Discover the Winter 2026 Capsule Collection.">
+  <meta name="twitter:image" content="https://swiftjackets.vercel.app/assets/images/jacket_orange.png">
+
+  <!-- STRUCTURED DATA (JSON-LD) FOR GOOGLE RICH RESULTS -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://swiftjackets.vercel.app/#organization",
+        "name": "SWIFT JACKETS",
+        "url": "https://swiftjackets.vercel.app/",
+        "logo": "https://swiftjackets.vercel.app/assets/images/jacket_orange.png",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "telephone": "+92-307-9436896",
+          "contactType": "Customer Support",
+          "availableLanguage": ["English", "Urdu"]
+        }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://swiftjackets.vercel.app/#website",
+        "url": "https://swiftjackets.vercel.app/",
+        "name": "SWIFT JACKETS",
+        "description": "Luxury alpine performance outerwear and street minimalism.",
+        "publisher": { "@id": "https://swiftjackets.vercel.app/#organization" }
+      }
+    ]
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- LUXURY TYPOGRAPHY: OUTFIT, PLUS JAKARTA SANS & SYNE -->
@@ -146,6 +200,21 @@
             class="hero-jacket-img" 
             id="mainJacketImg"
           >
+          <script>
+            (function() {
+              try {
+                var raw = localStorage.getItem('swift_jackets_products');
+                if (!raw) raw = localStorage.getItem('swift_jackets_products_backup');
+                if (raw) {
+                  var p = JSON.parse(raw);
+                  if (p && p[0] && p[0].image) {
+                    var el = document.getElementById('mainJacketImg');
+                    if (el) el.src = p[0].image;
+                  }
+                }
+              } catch(e) {}
+            })();
+          </script>
           <div class="jacket-realistic-shadow" id="jacketShadow"></div>
 
           <!-- 3D INTERACTIVE HINT BADGE -->

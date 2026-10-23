@@ -2204,3 +2204,225 @@ html, body {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* ===================================================================
+   SWIFT LUXURY CUSTOM DIALOG & TOAST SYSTEM (Replaces Browser Alerts)
+=================================================================== */
+.swift-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999999;
+  background: rgba(6, 8, 12, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.swift-dialog-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.swift-dialog-card {
+  width: 100%;
+  max-width: 440px;
+  background: linear-gradient(150deg, rgba(26, 32, 44, 0.98) 0%, rgba(13, 16, 23, 0.99) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  padding: 1.85rem 1.65rem;
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.85), 0 0 35px rgba(255, 106, 43, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.1rem;
+  transform: scale(0.92) translateY(14px);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.swift-dialog-backdrop.active .swift-dialog-card {
+  transform: scale(1) translateY(0);
+}
+
+.swift-dialog-icon-ring {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.swift-dialog-icon-ring svg {
+  width: 30px;
+  height: 30px;
+}
+
+/* Variant styles for icon */
+.swift-dialog-card.variant-warning .swift-dialog-icon-ring {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #f59e0b;
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.25);
+}
+
+.swift-dialog-card.variant-danger .swift-dialog-icon-ring {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: #ef4444;
+  box-shadow: 0 0 25px rgba(239, 68, 68, 0.25);
+}
+
+.swift-dialog-card.variant-success .swift-dialog-icon-ring {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #10b981;
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+}
+
+.swift-dialog-card.variant-info .swift-dialog-icon-ring {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.25);
+}
+
+.swift-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+.swift-dialog-title {
+  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  font-size: 1.28rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.swift-dialog-message {
+  font-size: 0.94rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+  white-space: pre-line;
+  word-break: break-word;
+}
+
+.swift-dialog-actions {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.4rem;
+}
+
+.swift-dialog-btn {
+  flex: 1;
+  padding: 0.82rem 1.2rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  font-family: inherit;
+}
+
+.swift-dialog-btn.primary {
+  background: linear-gradient(135deg, #ff6a2b 0%, #ff8c42 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(255, 106, 43, 0.38);
+}
+
+.swift-dialog-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 106, 43, 0.55);
+}
+
+.swift-dialog-card.variant-danger .swift-dialog-btn.primary {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.38);
+}
+
+.swift-dialog-card.variant-danger .swift-dialog-btn.primary:hover {
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.55);
+}
+
+.swift-dialog-btn.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.swift-dialog-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+/* TOAST NOTIFICATION */
+.swift-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10000000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .swift-toast-container {
+    left: 16px;
+    right: 16px;
+    bottom: 20px;
+    align-items: center;
+  }
+}
+
+.swift-toast-item {
+  background: rgba(18, 22, 32, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 14px;
+  padding: 0.75rem 1.2rem;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  pointer-events: auto;
+  animation: swift-toast-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes swift-toast-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.swift-toast-item.out {
+  animation: swift-toast-out 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes swift-toast-out {
+  to { opacity: 0; transform: translateY(10px) scale(0.9); }
+}

@@ -11,6 +11,127 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // =================================================================
+  // SWIFT LUXURY CUSTOM DIALOG & TOAST SYSTEM (Replaces Native Browser alert/confirm)
+  // =================================================================
+  function showAdminDialog({ title, message, type = 'warning', confirmText = 'OK', cancelText = null }) {
+    return new Promise((resolve) => {
+      let backdrop = document.getElementById('swiftDialogBackdrop');
+      if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.id = 'swiftDialogBackdrop';
+        backdrop.className = 'swift-dialog-backdrop';
+        backdrop.innerHTML = `
+          <div class="swift-dialog-card" id="swiftDialogCard">
+            <div class="swift-dialog-icon-ring" id="swiftDialogIconRing"></div>
+            <div class="swift-dialog-content">
+              <h3 class="swift-dialog-title" id="swiftDialogTitle"></h3>
+              <p class="swift-dialog-message" id="swiftDialogMessage"></p>
+            </div>
+            <div class="swift-dialog-actions" id="swiftDialogActions">
+              <button type="button" class="swift-dialog-btn secondary" id="swiftDialogCancelBtn" style="display: none;">Cancel</button>
+              <button type="button" class="swift-dialog-btn primary" id="swiftDialogConfirmBtn">OK</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(backdrop);
+      }
+
+      const card = backdrop.querySelector('#swiftDialogCard');
+      const iconRing = backdrop.querySelector('#swiftDialogIconRing');
+      const titleEl = backdrop.querySelector('#swiftDialogTitle');
+      const msgEl = backdrop.querySelector('#swiftDialogMessage');
+      const cancelBtn = backdrop.querySelector('#swiftDialogCancelBtn');
+      const confirmBtn = backdrop.querySelector('#swiftDialogConfirmBtn');
+
+      card.className = `swift-dialog-card variant-${type}`;
+
+      const icons = {
+        warning: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+        danger: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+        success: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>`,
+        info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`
+      };
+
+      iconRing.innerHTML = icons[type] || icons.warning;
+      titleEl.textContent = title || (type === 'danger' ? 'Confirm Action' : 'Notice');
+      msgEl.textContent = message || '';
+      confirmBtn.textContent = confirmText || 'OK';
+
+      if (cancelText) {
+        cancelBtn.style.display = 'inline-flex';
+        cancelBtn.textContent = cancelText;
+      } else {
+        cancelBtn.style.display = 'none';
+      }
+
+      function cleanup(res) {
+        backdrop.classList.remove('active');
+        confirmBtn.onclick = null;
+        cancelBtn.onclick = null;
+        backdrop.onclick = null;
+        document.removeEventListener('keydown', keyHandler);
+        resolve(res);
+      }
+
+      function keyHandler(e) {
+        if (e.key === 'Escape') cleanup(false);
+        else if (e.key === 'Enter') cleanup(true);
+      }
+
+      confirmBtn.onclick = () => cleanup(true);
+      cancelBtn.onclick = () => cleanup(false);
+      backdrop.onclick = (e) => {
+        if (e.target === backdrop) cleanup(false);
+      };
+      document.addEventListener('keydown', keyHandler);
+      backdrop.classList.add('active');
+    });
+  }
+
+  function showAdminConfirm(message, title = 'Confirm Action', options = {}) {
+    return showAdminDialog({
+      title: title,
+      message: message,
+      type: options.type || 'danger',
+      confirmText: options.confirmText || 'Confirm',
+      cancelText: options.cancelText || 'Cancel'
+    });
+  }
+
+  function showAdminAlert(message, title = 'Notice', type = 'warning') {
+    return showAdminDialog({
+      title: title,
+      message: message,
+      type: type,
+      confirmText: 'Understood'
+    });
+  }
+
+  function showAdminToast(text, type = 'info') {
+    let container = document.getElementById('swiftToastContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'swiftToastContainer';
+      container.className = 'swift-toast-container';
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'swift-toast-item';
+    const icon = type === 'success' ? '✓' : (type === 'danger' ? '⚠️' : 'ℹ️');
+    toast.innerHTML = `<span>${icon}</span> <span>${text}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.add('out');
+      setTimeout(() => toast.remove(), 260);
+    }, 3200);
+  }
+
+  // Override window.alert so native browser alert NEVER appears in Admin
+  window.alert = (msg) => {
+    return showAdminAlert(String(msg || ''), 'Admin Notice', 'warning');
+  };
+
+  // =================================================================
   // 1. DEFAULT DATASETS (Seeded safely so stats never show 0)
   // =================================================================
   const DEFAULT_PRODUCTS = [
@@ -648,12 +769,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (statSold) statSold.textContent = totalSold;
   }
 
+  function setAsHeroProduct(id) {
+    const idx = products.findIndex(p => p.id === id);
+    if (idx > 0) {
+      const [item] = products.splice(idx, 1);
+      products.unshift(item);
+      localStorage.setItem('swift_jackets_products', JSON.stringify(products));
+      localStorage.setItem('swift_jackets_products_backup', JSON.stringify(products));
+      localStorage.setItem('swift_has_user_changes', 'true');
+      localStorage.setItem('swift_last_sync_time', Date.now().toString());
+      renderProductsTable();
+      broadcastChange('PRODUCTS_UPDATED');
+      autoPushToCloud();
+      showAdminToast(`"${item.name}" is now the primary Hero Jacket!`, 'success');
+    }
+  }
+
   function renderProductsTable() {
     products = getSafeProducts();
     if (!productsTableBody) return;
     productsTableBody.innerHTML = '';
 
-    products.forEach((p) => {
+    products.forEach((p, index) => {
       const tr = document.createElement('tr');
       const allSizes = ['36', '38', '40', '42'];
       const sizeHtml = allSizes.map(s => {
@@ -662,13 +799,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }).join(' ');
 
       const conditionClass = (p.condition || '').includes('Used') ? 'condition-used' : '';
+      const isHero = index === 0;
 
       tr.innerHTML = `
         <td>
           <div class="table-product-cell">
             <img src="${p.image}" alt="${p.name}" class="table-thumb">
             <div>
-              <div class="table-prod-name">${p.name}</div>
+              <div class="table-prod-name">
+                ${p.name}
+                ${isHero ? '<span style="background: rgba(255, 106, 43, 0.2); border: 1px solid #ff6a2b; color: #ff8c42; font-size: 0.68rem; padding: 2px 7px; border-radius: 6px; margin-left: 6px; font-weight: 800; letter-spacing: 0.04em;">★ HERO</span>' : ''}
+              </div>
               <div class="table-prod-desc">${p.tagline || p.description}</div>
             </div>
           </div>
@@ -699,6 +840,9 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
         <td>
           <div class="action-btns-group">
+            <button class="btn-icon-action hero-btn" data-id="${p.id}" title="${isHero ? 'Current Featured Hero Jacket' : 'Make Primary Hero Jacket'}" style="${isHero ? 'color: #ff6a2b; border-color: rgba(255, 106, 43, 0.5);' : ''}">
+              <i data-lucide="star" class="icon-xs"></i>
+            </button>
             <button class="btn-icon-action edit-btn" data-id="${p.id}" title="Edit Jacket">
               <i data-lucide="edit-3" class="icon-xs"></i>
             </button>
@@ -709,6 +853,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
       `;
 
+      tr.querySelector('.hero-btn').addEventListener('click', () => setAsHeroProduct(p.id));
       tr.querySelector('.edit-btn').addEventListener('click', () => openEditProduct(p.id));
       tr.querySelector('.delete-btn').addEventListener('click', () => deleteProduct(p.id));
 
@@ -793,8 +938,13 @@ document.addEventListener('DOMContentLoaded', () => {
         autoPushToCloud();
       });
 
-      tr.querySelector('.delete-order-btn').addEventListener('click', () => {
-        if (confirm(`Delete order ${ord.orderId}?`)) {
+      tr.querySelector('.delete-order-btn').addEventListener('click', async () => {
+        const confirmed = await showAdminConfirm(
+          `Are you sure you want to delete order ${ord.orderId} for customer ${ord.customer ? ord.customer.name : ''}?`,
+          'Delete Customer Order?',
+          { confirmText: 'Delete Order', cancelText: 'Cancel', type: 'danger' }
+        );
+        if (confirmed) {
           orders.splice(index, 1);
           localStorage.setItem('swift_jackets_orders', JSON.stringify(orders));
           localStorage.setItem('swift_jackets_orders_backup', JSON.stringify(orders));
@@ -802,6 +952,7 @@ document.addEventListener('DOMContentLoaded', () => {
           updateBadges();
           broadcastChange('ORDERS_UPDATED');
           autoPushToCloud();
+          showAdminToast(`Order ${ord.orderId} deleted.`, 'info');
         }
       });
 
@@ -905,8 +1056,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Emergency Reset Defaults Button
   if (resetCatalogDefaultsBtn) {
-    resetCatalogDefaultsBtn.addEventListener('click', () => {
-      if (confirm('Restore factory jacket models and default stats?')) {
+    resetCatalogDefaultsBtn.addEventListener('click', async () => {
+      const confirmed = await showAdminConfirm(
+        'Restore factory jacket models and default stats? This will reset custom jackets and orders to original defaults.',
+        'Restore Factory Defaults?',
+        { confirmText: 'Restore Defaults', cancelText: 'Cancel', type: 'danger' }
+      );
+      if (confirmed) {
         localStorage.setItem('swift_jackets_products', JSON.stringify(DEFAULT_PRODUCTS));
         localStorage.setItem('swift_jackets_orders', JSON.stringify(DEFAULT_ORDERS));
         localStorage.setItem('swift_jackets_customers', JSON.stringify(DEFAULT_CUSTOMERS));
@@ -917,7 +1073,7 @@ document.addEventListener('DOMContentLoaded', () => {
         customers = DEFAULT_CUSTOMERS;
         showAdminDashboard();
         broadcastChange('ALL_RESET');
-        alert('Storefront and admin restored to factory defaults!');
+        showAdminToast('Storefront and admin restored to factory defaults.', 'info');
       }
     });
   }
@@ -1052,7 +1208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Client-side automatic image compressor (Prevents QuotaExceededError on mobile devices)
+  // Client-side automatic image compressor (Preserves 100% transparent PNG backgrounds)
   function compressImageFile(file, maxWidth, maxHeight, quality, callback) {
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -1073,8 +1229,40 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.width = w;
         canvas.height = h;
         const ctx = canvas.getContext('2d');
+
+        // Clear canvas with transparent pixels (no black background)
+        ctx.clearRect(0, 0, w, h);
         ctx.drawImage(img, 0, 0, w, h);
-        const compressed = canvas.toDataURL('image/jpeg', quality);
+
+        const isTransparentType = 
+          file.type === 'image/png' || 
+          file.type === 'image/webp' || 
+          file.type === 'image/x-png' ||
+          (file.name && /\.(png|webp)$/i.test(file.name));
+        let compressed;
+
+        if (isTransparentType) {
+          // Transparent cutouts (e.g. remove.bg): Always preserve full alpha transparency
+          try {
+            const png = canvas.toDataURL('image/png');
+            if (png.length < 750000) {
+              compressed = png;
+            } else {
+              const webp = canvas.toDataURL('image/webp', 0.88);
+              if (webp.startsWith('data:image/webp')) {
+                compressed = webp;
+              } else {
+                compressed = png;
+              }
+            }
+          } catch(e) {
+            compressed = canvas.toDataURL('image/png');
+          }
+        } else {
+          // Normal JPEG
+          compressed = canvas.toDataURL('image/jpeg', quality);
+        }
+
         callback(compressed);
       };
       img.src = event.target.result;
@@ -1193,13 +1381,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const idx = products.findIndex(p => p.id === editProductId.value);
         if (idx !== -1) products[idx] = payload;
       } else {
-        products.push(payload);
+        products.unshift(payload); // New jacket immediately becomes the primary hero jacket!
       }
 
       try {
         localStorage.setItem('swift_jackets_products', JSON.stringify(products));
         localStorage.setItem('swift_jackets_products_backup', JSON.stringify(products));
         localStorage.setItem('swift_has_user_changes', 'true');
+        localStorage.setItem('swift_last_sync_time', Date.now().toString());
       } catch (err) {
         console.warn('Storage save warning:', err);
       }
@@ -1209,25 +1398,38 @@ document.addEventListener('DOMContentLoaded', () => {
       closeProdModal();
       broadcastChange('PRODUCTS_UPDATED');
       autoPushToCloud();
+      showAdminToast(`"${payload.name}" saved and synced to live storefront!`, 'success');
     });
   }
 
-  function deleteProduct(id) {
+  async function deleteProduct(id) {
     if (products.length <= 1) {
-      alert('You must have at least one active product model in the store.');
+      showAdminAlert('You must have at least one active product model in the store.', 'Action Restricted', 'warning');
       return;
     }
-    if (confirm('Are you sure you want to remove this jacket model from the live store?')) {
+
+    const targetProd = products.find(p => p.id === id);
+    const prodName = targetProd ? targetProd.name : 'this jacket';
+
+    const confirmed = await showAdminConfirm(
+      `Are you sure you want to remove "${prodName}" from the live store?\nThis model will be deleted from all devices.`,
+      'Remove Jacket Model?',
+      { confirmText: 'Delete Jacket', cancelText: 'Cancel', type: 'danger' }
+    );
+
+    if (confirmed) {
       products = products.filter(p => p.id !== id);
       try {
         localStorage.setItem('swift_jackets_products', JSON.stringify(products));
         localStorage.setItem('swift_jackets_products_backup', JSON.stringify(products));
         localStorage.setItem('swift_has_user_changes', 'true');
+        localStorage.setItem('swift_last_sync_time', Date.now().toString());
       } catch (err) {}
       renderProductsTable();
       updateBadges();
       broadcastChange('PRODUCTS_UPDATED');
       autoPushToCloud();
+      showAdminToast(`"${prodName}" has been removed from store.`, 'info');
     }
   }
 
@@ -1293,6 +1495,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // =================================================================
   // 6.5 CROSS-DEVICE CLOUD & QR SYNCHRONIZATION ENGINE
   // =================================================================
+  const GLOBAL_CLOUD_SYNC_URL = 'https://ntfy.sh/swiftjackets_cloud_v5_live_9281';
+
   async function autoPushToCloud(silent = true) {
     const payload = {
       updatedAt: Date.now(),
@@ -1307,7 +1511,16 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('swift_last_sync_time', payload.updatedAt.toString());
     } catch(e) {}
 
-    // 1. Push to PHP endpoint (for InfinityFree / kesug.com)
+    // 1. Push to Global Multi-Device Cloud Channel (Shared across all mobile & desktop devices)
+    try {
+      fetch(GLOBAL_CLOUD_SYNC_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Title': 'StoreUpdate' },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+    } catch(e) {}
+
+    // 2. Push to PHP endpoint (for InfinityFree / kesug.com)
     try {
       fetch('sync.php', {
         method: 'POST',
@@ -1316,7 +1529,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }).catch(() => {});
     } catch(e) {}
 
-    // 2. Push to Vercel Serverless API (/api/sync)
+    // 3. Push to Vercel Serverless API (/api/sync)
     try {
       fetch('/api/sync', {
         method: 'POST',
@@ -1326,7 +1539,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) {}
 
     if (!silent && cloudStatusMsg) {
-      cloudStatusMsg.textContent = `✓ Successfully pushed to cloud at ${new Date().toLocaleTimeString()}!`;
+      cloudStatusMsg.textContent = `✓ Successfully pushed to global cloud at ${new Date().toLocaleTimeString()}! All devices updated.`;
       cloudStatusMsg.style.color = '#10b981';
     }
   }
@@ -1338,18 +1551,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let cloudData = null;
-    const endpoints = ['sync.php', '/api/sync', 'data/store_data.json'];
-    for (const ep of endpoints) {
-      try {
-        const res = await fetch(ep, { cache: 'no-store' });
-        if (res && res.ok) {
-          const json = await res.json();
-          if (json && Array.isArray(json.products) && json.products.length > 0) {
-            cloudData = json;
-            break;
-          }
+
+    // 1. Check Global Cloud Channel first
+    try {
+      const res = await fetch(`${GLOBAL_CLOUD_SYNC_URL}/json?poll=1`, { cache: 'no-store' });
+      if (res.ok) {
+        const text = await res.text();
+        const lines = text.trim().split('\n').filter(Boolean);
+        let maxTime = 0;
+        for (const line of lines) {
+          try {
+            const entry = JSON.parse(line);
+            if (entry.event === 'message') {
+              let parsed = null;
+              if (entry.attachment && entry.attachment.url) {
+                try {
+                  const aRes = await fetch(entry.attachment.url);
+                  if (aRes.ok) parsed = await aRes.json();
+                } catch(e) {}
+              }
+              if (!parsed && entry.message) {
+                try {
+                  parsed = JSON.parse(entry.message);
+                } catch(e) {}
+              }
+              if (parsed && Array.isArray(parsed.products) && parsed.products.length > 0) {
+                const t = parseInt(parsed.updatedAt || '0');
+                if (t >= maxTime) {
+                  maxTime = t;
+                  cloudData = parsed;
+                }
+              }
+            }
+          } catch(e) {}
         }
-      } catch(e) {}
+      }
+    } catch(e) {}
+
+    // 2. Fallbacks: sync.php, /api/sync, data/store_data.json
+    if (!cloudData) {
+      const endpoints = ['sync.php', '/api/sync', 'data/store_data.json'];
+      for (const ep of endpoints) {
+        try {
+          const res = await fetch(ep, { cache: 'no-store' });
+          if (res && res.ok) {
+            const json = await res.json();
+            if (json && Array.isArray(json.products) && json.products.length > 0) {
+              cloudData = json;
+              break;
+            }
+          }
+        } catch(e) {}
+      }
     }
 
     if (cloudData) {
@@ -1465,36 +1718,138 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function syncFromCloudOnBoot() {
     try {
-      let res = null;
-      try { res = await fetch('sync.php', { cache: 'no-store' }); } catch(e) {}
-      if (!res || !res.ok) {
-        try { res = await fetch('/api/sync', { cache: 'no-store' }); } catch(e) {}
-      }
-      if (!res || !res.ok) {
-        try { res = await fetch('data/store_data.json', { cache: 'no-store' }); } catch(e) {}
-      }
-      if (res && res.ok) {
-        const cloudData = await res.json();
-        if (cloudData && Array.isArray(cloudData.products) && cloudData.products.length > 0) {
-          const localTime = parseInt(localStorage.getItem('swift_last_sync_time') || '0');
-          const cloudTime = parseInt(cloudData.updatedAt || '0');
-          if (cloudTime > localTime || !localStorage.getItem('swift_has_user_changes')) {
-            products = cloudData.products;
-            localStorage.setItem('swift_jackets_products', JSON.stringify(products));
-            localStorage.setItem('swift_jackets_products_backup', JSON.stringify(products));
-            localStorage.setItem('swift_last_sync_time', cloudTime.toString());
-            if (cloudData.brand) {
-              brandSettings = { ...DEFAULT_BRAND, ...cloudData.brand };
-              localStorage.setItem('swift_brand_settings', JSON.stringify(brandSettings));
-              localStorage.setItem('swift_brand_backup', JSON.stringify(brandSettings));
-              populateBrandForm();
-            }
-            renderProductsTable();
-            updateBadges();
+      let cloudData = null;
+
+      // 1. Fetch from Global Multi-Device Cloud Channel first (syncs across all mobile & PC devices)
+      try {
+        const res = await fetch(`${GLOBAL_CLOUD_SYNC_URL}/json?poll=1`, { cache: 'no-store' });
+        if (res.ok) {
+          const text = await res.text();
+          const lines = text.trim().split('\n').filter(Boolean);
+          let maxTime = 0;
+          for (const line of lines) {
+            try {
+              const entry = JSON.parse(line);
+              if (entry.event === 'message') {
+                let parsed = null;
+                if (entry.attachment && entry.attachment.url) {
+                  try {
+                    const aRes = await fetch(entry.attachment.url);
+                    if (aRes.ok) parsed = await aRes.json();
+                  } catch(e) {}
+                }
+                if (!parsed && entry.message) {
+                  try {
+                    parsed = JSON.parse(entry.message);
+                  } catch(e) {}
+                }
+                if (parsed && Array.isArray(parsed.products) && parsed.products.length > 0) {
+                  const t = parseInt(parsed.updatedAt || '0');
+                  if (t >= maxTime) {
+                    maxTime = t;
+                    cloudData = parsed;
+                  }
+                }
+              }
+            } catch(e) {}
           }
+        }
+      } catch(e) {}
+
+      // 2. Fallbacks: ONLY if local storage has never been initialized
+      const hasStoredProducts = !!localStorage.getItem('swift_jackets_products');
+      if (!cloudData && !hasStoredProducts) {
+        const endpoints = ['sync.php', '/api/sync', 'data/store_data.json'];
+        for (const ep of endpoints) {
+          try {
+            const res = await fetch(ep, { cache: 'no-store' });
+            if (res && res.ok) {
+              const json = await res.json();
+              if (json && Array.isArray(json.products) && json.products.length > 0) {
+                cloudData = json;
+                break;
+              }
+            }
+          } catch(e) {}
+        }
+      }
+
+      if (cloudData && Array.isArray(cloudData.products) && cloudData.products.length > 0) {
+        const localTime = parseInt(localStorage.getItem('swift_last_sync_time') || '0');
+        const cloudTime = parseInt(cloudData.updatedAt || '0');
+        const hasUserChanges = localStorage.getItem('swift_has_user_changes') === 'true';
+
+        // Only update if cloud has genuine newer changes, or if local is completely empty
+        if (cloudTime > localTime || (!hasUserChanges && !hasStoredProducts)) {
+          products = cloudData.products;
+          localStorage.setItem('swift_jackets_products', JSON.stringify(products));
+          localStorage.setItem('swift_jackets_products_backup', JSON.stringify(products));
+          localStorage.setItem('swift_last_sync_time', cloudTime.toString());
+          if (cloudData.brand) {
+            brandSettings = { ...DEFAULT_BRAND, ...cloudData.brand };
+            localStorage.setItem('swift_brand_settings', JSON.stringify(brandSettings));
+            localStorage.setItem('swift_brand_backup', JSON.stringify(brandSettings));
+            populateBrandForm();
+          }
+          renderProductsTable();
+          updateBadges();
         }
       }
     } catch (e) {}
+  }
+
+  // Live Real-Time Multi-Device Stream for Admin (Instant updates without reload)
+  function initAdminLiveCloudStream() {
+    try {
+      if (typeof EventSource !== 'undefined') {
+        const es = new EventSource(`${GLOBAL_CLOUD_SYNC_URL}/sse`);
+        es.onmessage = (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            if (data && data.event === 'message' && data.message) {
+              const parsed = JSON.parse(data.message);
+
+              // 1. Order placed by customer on storefront
+              if (parsed && parsed.type === 'ORDER_PLACED' && Array.isArray(parsed.orders) && parsed.orders.length > 0) {
+                orders = parsed.orders;
+                localStorage.setItem('swift_jackets_orders', JSON.stringify(orders));
+                localStorage.setItem('swift_jackets_orders_backup', JSON.stringify(orders));
+                if (Array.isArray(parsed.customers)) {
+                  customers = parsed.customers;
+                  localStorage.setItem('swift_jackets_customers', JSON.stringify(customers));
+                  localStorage.setItem('swift_jackets_customers_backup', JSON.stringify(customers));
+                  renderCustomersTable();
+                }
+                renderOrdersTable();
+                updateBadges();
+                showAdminToast(`New Order ${parsed.order ? parsed.order.orderId : ''} Placed!`, 'success');
+              }
+
+              // 2. Product and Brand changes from other devices
+              if (parsed && Array.isArray(parsed.products) && parsed.products.length > 0) {
+                const localTime = parseInt(localStorage.getItem('swift_last_sync_time') || '0');
+                const cloudTime = parseInt(parsed.updatedAt || '0');
+                if (cloudTime > localTime) {
+                  products = parsed.products;
+                  localStorage.setItem('swift_jackets_products', JSON.stringify(products));
+                  localStorage.setItem('swift_jackets_products_backup', JSON.stringify(products));
+                  localStorage.setItem('swift_last_sync_time', cloudTime.toString());
+                  localStorage.setItem('swift_has_user_changes', 'true');
+                  if (parsed.brand) {
+                    brandSettings = { ...DEFAULT_BRAND, ...parsed.brand };
+                    localStorage.setItem('swift_brand_settings', JSON.stringify(brandSettings));
+                    localStorage.setItem('swift_brand_backup', JSON.stringify(brandSettings));
+                    populateBrandForm();
+                  }
+                  renderProductsTable();
+                  updateBadges();
+                }
+              }
+            }
+          } catch(err) {}
+        };
+      }
+    } catch(e) {}
   }
 
   // Sync Modal Open / Close
@@ -1665,6 +2020,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check URL sync parameter and cloud updates on boot
   checkUrlSyncParam();
   syncFromCloudOnBoot();
+  initAdminLiveCloudStream();
 
   // Cross-tab storage listener
   if (syncChannel) {

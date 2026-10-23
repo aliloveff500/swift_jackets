@@ -10,6 +10,111 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  // =================================================================
+  // SWIFT LUXURY CUSTOM DIALOG & TOAST SYSTEM (Replaces Native Browser alert/confirm)
+  // =================================================================
+  function showSwiftAlert(options) {
+    const opts = typeof options === 'string' ? { message: options } : (options || {});
+    const title = opts.title || 'Notice';
+    const message = opts.message || '';
+    const type = opts.type || 'warning';
+    const confirmText = opts.confirmText || 'Got It';
+
+    return new Promise((resolve) => {
+      let backdrop = document.getElementById('swiftDialogBackdrop');
+      if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.id = 'swiftDialogBackdrop';
+        backdrop.className = 'swift-dialog-backdrop';
+        backdrop.innerHTML = `
+          <div class="swift-dialog-card" id="swiftDialogCard">
+            <div class="swift-dialog-icon-ring" id="swiftDialogIconRing"></div>
+            <div class="swift-dialog-content">
+              <h3 class="swift-dialog-title" id="swiftDialogTitle"></h3>
+              <p class="swift-dialog-message" id="swiftDialogMessage"></p>
+            </div>
+            <div class="swift-dialog-actions" id="swiftDialogActions">
+              <button type="button" class="swift-dialog-btn secondary" id="swiftDialogCancelBtn" style="display: none;">Cancel</button>
+              <button type="button" class="swift-dialog-btn primary" id="swiftDialogConfirmBtn">OK</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(backdrop);
+      }
+
+      const card = backdrop.querySelector('#swiftDialogCard');
+      const iconRing = backdrop.querySelector('#swiftDialogIconRing');
+      const titleEl = backdrop.querySelector('#swiftDialogTitle');
+      const msgEl = backdrop.querySelector('#swiftDialogMessage');
+      const cancelBtn = backdrop.querySelector('#swiftDialogCancelBtn');
+      const confirmBtn = backdrop.querySelector('#swiftDialogConfirmBtn');
+
+      card.className = `swift-dialog-card variant-${type}`;
+
+      const icons = {
+        warning: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+        danger: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+        success: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>`,
+        info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`
+      };
+
+      iconRing.innerHTML = icons[type] || icons.warning;
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+      confirmBtn.textContent = confirmText;
+      cancelBtn.style.display = 'none';
+
+      function cleanup(res) {
+        backdrop.classList.remove('active');
+        confirmBtn.onclick = null;
+        cancelBtn.onclick = null;
+        backdrop.onclick = null;
+        document.removeEventListener('keydown', keyHandler);
+        resolve(res);
+      }
+
+      function keyHandler(e) {
+        if (e.key === 'Escape' || e.key === 'Enter') cleanup(true);
+      }
+
+      confirmBtn.onclick = () => cleanup(true);
+      backdrop.onclick = (e) => {
+        if (e.target === backdrop) cleanup(true);
+      };
+      document.addEventListener('keydown', keyHandler);
+      backdrop.classList.add('active');
+    });
+  }
+
+  function showSwiftToast(text, type = 'info') {
+    let container = document.getElementById('swiftToastContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'swiftToastContainer';
+      container.className = 'swift-toast-container';
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'swift-toast-item';
+    const icon = type === 'success' ? '✓' : (type === 'danger' ? '⚠️' : 'ℹ️');
+    toast.innerHTML = `<span>${icon}</span> <span>${text}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.add('out');
+      setTimeout(() => toast.remove(), 260);
+    }, 3200);
+  }
+
+  // Override window.alert so Google/native alerts NEVER appear anywhere on website
+  window.alert = (msg) => {
+    return showSwiftAlert({
+      title: 'Notice',
+      message: String(msg || ''),
+      type: 'warning',
+      confirmText: 'Understood'
+    });
+  };
+
   // 1. DEFAULT DATASET (Seeded if localStorage empty)
   const DEFAULT_PRODUCTS = [
     {
@@ -322,6 +427,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (swatchActiveName) swatchActiveName.textContent = prod.colorName;
+
+    // Immediately update main hero jacket image to match current product
+    if (mainJacketImg && prod && prod.image) {
+      mainJacketImg.src = prod.image;
+    }
   }
 
   // 5. INITIALIZE VISIBLE COLORWAY SWATCHES
@@ -560,6 +670,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (previewPriceTitle) {
       previewPriceTitle.textContent = formatPKR(upcomingProd.price);
     }
+
+    // Immediately update main hero jacket image to match current product
+    if (mainJacketImg && prod && prod.image) {
+      mainJacketImg.src = prod.image;
+    }
   }
 
   // 8. NAVIGATION ARROWS
@@ -662,16 +777,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 11. FLYING ADD TO CART ANIMATION
   addToCartBtn.addEventListener('click', () => {
-    const currentProd = products[currentIndex];
+    const currentProd = products[currentIndex] || products[0];
     
     cartItemImage.src = currentProd.image;
     cartItemTitle.textContent = currentProd.name;
-    cartItemPrice.textContent = `$${currentProd.price}`;
+    cartItemPrice.textContent = formatPKR(currentProd.price);
     cartItemColor.textContent = currentProd.colorName;
     cartItemSize.textContent = selectedSize;
     cartQuantity = 1;
     qtyValue.textContent = cartQuantity;
     updateCartCalculations();
+
+    // Reset checkout so multiple orders can be placed effortlessly without lockup
+    resetCheckoutStateForNewOrder();
 
     cartCheckoutView.style.display = 'flex';
     cartItemCard.style.display = 'flex';
@@ -785,6 +903,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   openCartDrawer.addEventListener('click', () => {
+    prefillCustomerDetails();
     cartOverlay.classList.add('active');
   });
 
@@ -798,7 +917,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 13. CHECKOUT FORM ORDER PLACEMENT & LIVE STATUS IN BLANK AREA
+  // 13. CHECKOUT FORM ORDER PLACEMENT & MULTI-ORDER LIFECYCLE
+  function prefillCustomerDetails() {
+    try {
+      const raw = localStorage.getItem('swift_last_customer_info');
+      if (raw) {
+        const info = JSON.parse(raw);
+        const nameInput = document.getElementById('custName');
+        const emailInput = document.getElementById('custEmail');
+        const phoneInput = document.getElementById('custPhone');
+        const cityInput = document.getElementById('custCity');
+        const houseInput = document.getElementById('custHouse');
+        const streetInput = document.getElementById('custStreet');
+        if (nameInput && !nameInput.value && info.name) nameInput.value = info.name;
+        if (emailInput && !emailInput.value && info.email) emailInput.value = info.email;
+        if (phoneInput && !phoneInput.value && info.phone) phoneInput.value = info.phone;
+        if (cityInput && !cityInput.value && info.city) cityInput.value = info.city;
+        if (houseInput && !houseInput.value && info.house) houseInput.value = info.house;
+        if (streetInput && !streetInput.value && info.street) streetInput.value = info.street;
+      }
+    } catch(e) {}
+  }
+
+  function resetCheckoutStateForNewOrder() {
+    if (inlineOrderStatusCard) {
+      inlineOrderStatusCard.style.display = 'none';
+    }
+    if (placeOrderBtn) {
+      placeOrderBtn.innerHTML = `<span>Place Order Now</span><i data-lucide="check-circle" class="icon-sm"></i>`;
+      placeOrderBtn.style.background = '';
+      placeOrderBtn.style.boxShadow = '';
+      placeOrderBtn.disabled = false;
+    }
+    prefillCustomerDetails();
+    if (cartDrawer) {
+      cartDrawer.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+
   function handlePlaceOrder(e) {
     if (e) e.preventDefault();
 
@@ -817,11 +974,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const street = streetInput ? streetInput.value.trim() : '';
 
     if (!name || !email || !phone || !city || !street) {
-      alert('Please fill out all required delivery fields.');
-      if (!name && nameInput) nameInput.focus();
-      else if (!phone && phoneInput) phoneInput.focus();
+      showSwiftAlert({
+        title: 'Missing Required Details',
+        message: 'Please fill out your Full Name, Email, Phone, City, and Street Address to complete your order.',
+        type: 'warning',
+        confirmText: 'Got It'
+      });
+
+      const requiredFields = [
+        { el: nameInput, val: name },
+        { el: emailInput, val: email },
+        { el: phoneInput, val: phone },
+        { el: cityInput, val: city },
+        { el: streetInput, val: street }
+      ];
+      requiredFields.forEach(f => {
+        if (!f.val && f.el) {
+          f.el.style.borderColor = '#ef4444';
+          f.el.style.boxShadow = '0 0 12px rgba(239, 68, 68, 0.45)';
+          setTimeout(() => {
+            f.el.style.borderColor = '';
+            f.el.style.boxShadow = '';
+          }, 3500);
+        }
+      });
       return;
     }
+
+    // Save customer info in localStorage so future orders pre-fill seamlessly
+    try {
+      localStorage.setItem('swift_last_customer_info', JSON.stringify({ name, email, phone, city, house, street }));
+    } catch(e) {}
 
     const currentProd = products[currentIndex] || products[0];
     const orderNum = Math.floor(10000 + Math.random() * 90000);
@@ -874,6 +1057,21 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       localStorage.setItem('swift_jackets_customers', JSON.stringify(customersList));
     } catch (err) {}
+
+    // Immediately push new order to Cloud Sync so Admin on mobile or PC receives it in real time!
+    try {
+      fetch(GLOBAL_CLOUD_SYNC_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Title': 'NewOrder' },
+        body: JSON.stringify({
+          updatedAt: Date.now(),
+          type: 'ORDER_PLACED',
+          order: newOrder,
+          orders: ordersList,
+          customers: customersList
+        })
+      }).catch(() => {});
+    } catch (e) {}
 
     // Render LIVE INLINE STATUS CARD IN THE BLANK AREA BELOW BUTTON
     if (inlineOrderStatusCard) {
@@ -951,23 +1149,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Handle inline "Place Another Order" button
   if (inlineOrderAgainBtn) {
     inlineOrderAgainBtn.addEventListener('click', () => {
-      if (inlineOrderStatusCard) inlineOrderStatusCard.style.display = 'none';
-      if (placeOrderBtn) {
-        placeOrderBtn.innerHTML = `<span>Place Order Now</span><i data-lucide="check-circle" class="icon-sm"></i>`;
-        placeOrderBtn.style.background = '';
-        placeOrderBtn.style.boxShadow = '';
-        placeOrderBtn.disabled = false;
-      }
-      if (checkoutForm) checkoutForm.reset();
-      if (cartDrawer) {
-        cartDrawer.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      if (window.lucide) lucide.createIcons();
+      resetCheckoutStateForNewOrder();
     });
   }
 
   if (orderAnotherBtn) {
     orderAnotherBtn.addEventListener('click', () => {
+      resetCheckoutStateForNewOrder();
       cartCheckoutView.style.display = 'flex';
       cartCheckoutView.style.opacity = '1';
       orderStatusView.style.display = 'none';
@@ -1224,7 +1412,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('swift_brand_backup', JSON.stringify(parsed.b));
           }
           window.history.replaceState({}, document.title, window.location.pathname);
-          alert('🎉 Store Synced Successfully! All products & prices updated on this device.');
+          showSwiftToast('Store Synced Successfully!', 'success');
           window.location.reload();
         }
       }
@@ -1233,34 +1421,128 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  const GLOBAL_CLOUD_SYNC_URL = 'https://ntfy.sh/swiftjackets_cloud_v5_live_9281';
+
   async function checkCloudUpdates() {
     try {
-      let res = null;
-      try { res = await fetch('sync.php', { cache: 'no-store' }); } catch(e) {}
-      if (!res || !res.ok) {
-        try { res = await fetch('/api/sync', { cache: 'no-store' }); } catch(e) {}
-      }
-      if (!res || !res.ok) {
-        try { res = await fetch('data/store_data.json', { cache: 'no-store' }); } catch(e) {}
-      }
-      if (res && res.ok) {
-        const cloudData = await res.json();
-        if (cloudData && Array.isArray(cloudData.products) && cloudData.products.length > 0) {
-          const localTime = parseInt(localStorage.getItem('swift_last_sync_time') || '0');
-          const cloudTime = parseInt(cloudData.updatedAt || '0');
-          if (cloudTime > localTime || !localStorage.getItem('swift_has_user_changes')) {
-            localStorage.setItem('swift_jackets_products', JSON.stringify(cloudData.products));
-            localStorage.setItem('swift_jackets_products_backup', JSON.stringify(cloudData.products));
-            localStorage.setItem('swift_last_sync_time', cloudTime.toString());
-            if (cloudData.brand) {
-              localStorage.setItem('swift_brand_settings', JSON.stringify(cloudData.brand));
-              localStorage.setItem('swift_brand_backup', JSON.stringify(cloudData.brand));
-            }
-            reloadStoreFromStorage();
+      let cloudData = null;
+
+      // 1. Fetch from Global Multi-Device Cloud Sync Channel (Works across all devices/networks)
+      try {
+        const res = await fetch(`${GLOBAL_CLOUD_SYNC_URL}/json?poll=1`, { cache: 'no-store' });
+        if (res.ok) {
+          const text = await res.text();
+          const lines = text.trim().split('\n').filter(Boolean);
+          let maxTime = 0;
+          for (const line of lines) {
+            try {
+              const entry = JSON.parse(line);
+              if (entry.event === 'message') {
+                let parsed = null;
+                if (entry.attachment && entry.attachment.url) {
+                  try {
+                    const aRes = await fetch(entry.attachment.url);
+                    if (aRes.ok) parsed = await aRes.json();
+                  } catch(e) {}
+                }
+                if (!parsed && entry.message) {
+                  try {
+                    parsed = JSON.parse(entry.message);
+                  } catch(e) {}
+                }
+                if (parsed && Array.isArray(parsed.products) && parsed.products.length > 0) {
+                  const t = parseInt(parsed.updatedAt || '0');
+                  if (t >= maxTime) {
+                    maxTime = t;
+                    cloudData = parsed;
+                  }
+                }
+              }
+            } catch(e) {}
           }
         }
+      } catch(e) {}
+
+      // 2. Fallbacks: ONLY if local storage has never been initialized
+      const hasStoredProducts = !!localStorage.getItem('swift_jackets_products');
+      if (!cloudData && !hasStoredProducts) {
+        const fallbacks = ['sync.php', '/api/sync', 'data/store_data.json'];
+        for (const fb of fallbacks) {
+          try {
+            const res = await fetch(fb, { cache: 'no-store' });
+            if (res && res.ok) {
+              const json = await res.json();
+              if (json && Array.isArray(json.products) && json.products.length > 0) {
+                cloudData = json;
+                break;
+              }
+            }
+          } catch(e) {}
+        }
       }
-    } catch (err) {}
+
+      if (cloudData && Array.isArray(cloudData.products) && cloudData.products.length > 0) {
+        const localTime = parseInt(localStorage.getItem('swift_last_sync_time') || '0');
+        const cloudTime = parseInt(cloudData.updatedAt || '0');
+        const hasUserChanges = localStorage.getItem('swift_has_user_changes') === 'true';
+
+        // Only update if cloud has genuine newer changes, or if local is completely empty
+        if (cloudTime > localTime || (!hasUserChanges && !hasStoredProducts)) {
+          localStorage.setItem('swift_jackets_products', JSON.stringify(cloudData.products));
+          localStorage.setItem('swift_jackets_products_backup', JSON.stringify(cloudData.products));
+          localStorage.setItem('swift_last_sync_time', cloudTime.toString());
+          if (cloudData.brand) {
+            localStorage.setItem('swift_brand_settings', JSON.stringify(cloudData.brand));
+            localStorage.setItem('swift_brand_backup', JSON.stringify(cloudData.brand));
+          }
+          reloadStoreFromStorage();
+        }
+      }
+    } catch (err) {
+      console.warn('Cloud sync error:', err);
+    }
+  }
+
+  // Live Real-Time Multi-Device Stream (Instant updates without page refresh)
+  function initLiveCloudStream() {
+    try {
+      if (typeof EventSource !== 'undefined') {
+        const es = new EventSource(`${GLOBAL_CLOUD_SYNC_URL}/sse`);
+        es.onmessage = async (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            if (data && data.event === 'message') {
+              let parsed = null;
+              if (data.attachment && data.attachment.url) {
+                try {
+                  const aRes = await fetch(data.attachment.url);
+                  if (aRes.ok) parsed = await aRes.json();
+                } catch(err) {}
+              }
+              if (!parsed && data.message) {
+                try {
+                  parsed = JSON.parse(data.message);
+                } catch(err) {}
+              }
+              if (parsed && Array.isArray(parsed.products) && parsed.products.length > 0) {
+                const localTime = parseInt(localStorage.getItem('swift_last_sync_time') || '0');
+                const cloudTime = parseInt(parsed.updatedAt || '0');
+                if (cloudTime > localTime) {
+                  localStorage.setItem('swift_jackets_products', JSON.stringify(parsed.products));
+                  localStorage.setItem('swift_jackets_products_backup', JSON.stringify(parsed.products));
+                  localStorage.setItem('swift_last_sync_time', cloudTime.toString());
+                  if (parsed.brand) {
+                    localStorage.setItem('swift_brand_settings', JSON.stringify(parsed.brand));
+                    localStorage.setItem('swift_brand_backup', JSON.stringify(parsed.brand));
+                  }
+                  reloadStoreFromStorage();
+                }
+              }
+            }
+          } catch(err) {}
+        };
+      }
+    } catch(e) {}
   }
 
   // 18. INITIALIZE APPLICATION
@@ -1270,8 +1552,12 @@ document.addEventListener('DOMContentLoaded', () => {
   applyProductTheme(products[0]);
   updateEditorialContent(products[0]);
   updateSizeAvailability(products[0]);
+  if (mainJacketImg && products[0] && products[0].image) {
+    mainJacketImg.src = products[0].image;
+  }
   updateAuthModalState();
   checkCloudUpdates();
+  initLiveCloudStream();
   if (window.lucide) {
     lucide.createIcons();
   }
