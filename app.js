@@ -112,19 +112,25 @@ document.addEventListener('DOMContentLoaded', () => {
     return `PKR ${num.toLocaleString('en-PK')}`;
   }
 
-  // Load products from LocalStorage (or seed)
+  // Load products from LocalStorage with dual redundancy backup
   function getLiveProducts() {
     let stored = localStorage.getItem('swift_jackets_products');
     if (!stored) {
-      localStorage.setItem('swift_jackets_products', JSON.stringify(DEFAULT_PRODUCTS));
+      stored = localStorage.getItem('swift_jackets_products_backup');
+    }
+    if (!stored) {
+      try {
+        localStorage.setItem('swift_jackets_products', JSON.stringify(DEFAULT_PRODUCTS));
+        localStorage.setItem('swift_jackets_products_backup', JSON.stringify(DEFAULT_PRODUCTS));
+      } catch (err) {}
       return DEFAULT_PRODUCTS;
     }
     try {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed) && parsed.length > 0) {
         parsed.forEach(p => {
-          if (p.price < 1000) p.price = p.price * 100;
-          if (p.originalPrice < 1000) p.originalPrice = p.originalPrice * 100;
+          if (p.price && p.price < 100) p.price = p.price * 100;
+          if (p.originalPrice && p.originalPrice < 100) p.originalPrice = p.originalPrice * 100;
           // Auto-migrate legacy long paragraph text to clean concise 1-liners
           if (p.description && p.description.includes("It's not just about staying warm")) {
             p.description = "Ultralight aerogel warmth. Sculpted modern silhouette.";
@@ -136,7 +142,10 @@ document.addEventListener('DOMContentLoaded', () => {
             p.description = "Windproof micro-weave. High-contrast thermal warmth.";
           }
         });
-        localStorage.setItem('swift_jackets_products', JSON.stringify(parsed));
+        try {
+          localStorage.setItem('swift_jackets_products', JSON.stringify(parsed));
+          localStorage.setItem('swift_jackets_products_backup', JSON.stringify(parsed));
+        } catch (err) {}
         return parsed;
       }
       return DEFAULT_PRODUCTS;
@@ -219,6 +228,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const placedOrderTitle = document.getElementById('placedOrderTitle');
   const placedOrderDetails = document.getElementById('placedOrderDetails');
   const placedOrderPrice = document.getElementById('placedOrderPrice');
+
+  // INLINE ORDER STATUS ELEMENTS (In Shopping Bag Drawer Blank Area)
+  const inlineOrderStatusCard = document.getElementById('inlineOrderStatusCard');
+  const inlineOrderId = document.getElementById('inlineOrderId');
+  const inlineOrderStatus = document.getElementById('inlineOrderStatus');
+  const inlineRecipientName = document.getElementById('inlineRecipientName');
+  const inlineContact = document.getElementById('inlineContact');
+  const inlineAddress = document.getElementById('inlineAddress');
+  const inlineTotal = document.getElementById('inlineTotal');
+  const inlineWhatsAppBtn = document.getElementById('inlineWhatsAppBtn');
+  const inlineOrderAgainBtn = document.getElementById('inlineOrderAgainBtn');
+  const cartDrawer = document.getElementById('cartDrawer');
 
   // AUTH MODAL ELEMENTS
   const authModal = document.getElementById('authModal');
@@ -777,27 +798,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 13. CHECKOUT FORM ORDER PLACEMENT & EMAIL DISPATCH
-  checkoutForm.addEventListener('submit', (e) => {
-    e.preventDefault();
+  // 13. CHECKOUT FORM ORDER PLACEMENT & LIVE STATUS IN BLANK AREA
+  function handlePlaceOrder(e) {
+    if (e) e.preventDefault();
 
-    const name = document.getElementById('custName').value.trim();
-    const email = document.getElementById('custEmail').value.trim();
-    const phone = document.getElementById('custPhone').value.trim();
-    const city = document.getElementById('custCity').value.trim();
-    const house = document.getElementById('custHouse').value.trim();
-    const street = document.getElementById('custStreet').value.trim();
+    const nameInput = document.getElementById('custName');
+    const emailInput = document.getElementById('custEmail');
+    const phoneInput = document.getElementById('custPhone');
+    const cityInput = document.getElementById('custCity');
+    const houseInput = document.getElementById('custHouse');
+    const streetInput = document.getElementById('custStreet');
+
+    const name = nameInput ? nameInput.value.trim() : '';
+    const email = emailInput ? emailInput.value.trim() : '';
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+    const city = cityInput ? cityInput.value.trim() : '';
+    const house = houseInput ? houseInput.value.trim() : '';
+    const street = streetInput ? streetInput.value.trim() : '';
 
     if (!name || !email || !phone || !city || !street) {
       alert('Please fill out all required delivery fields.');
+      if (!name && nameInput) nameInput.focus();
+      else if (!phone && phoneInput) phoneInput.focus();
       return;
     }
 
-    const currentProd = products[currentIndex];
+    const currentProd = products[currentIndex] || products[0];
     const orderNum = Math.floor(10000 + Math.random() * 90000);
     const orderId = `#SJ-${orderNum}`;
-    const fullAddress = `${house}, ${street}, ${city}`;
-    const totalPrice = currentProd.price * cartQuantity;
+    const fullAddress = `${house ? house + ', ' : ''}${street}, ${city}`;
+    const totalPrice = (currentProd.price || 14999) * cartQuantity;
 
     const newOrder = {
       orderId: orderId,
@@ -816,13 +846,16 @@ document.addEventListener('DOMContentLoaded', () => {
       status: 'Pending' // Orders begin as Pending in Admin Panel
     };
 
-    // Save order in localStorage for Admin Panel
+    // Save order in localStorage with backup for Admin Panel
     ordersList.unshift(newOrder);
-    localStorage.setItem('swift_jackets_orders', JSON.stringify(ordersList));
+    try {
+      localStorage.setItem('swift_jackets_orders', JSON.stringify(ordersList));
+      localStorage.setItem('swift_jackets_orders_backup', JSON.stringify(ordersList));
+    } catch (err) {}
 
     // Register / Update customer in Customers Registry
     let customersList = JSON.parse(localStorage.getItem('swift_jackets_customers') || '[]');
-    let existingCust = customersList.find(c => c.email.toLowerCase() === email.toLowerCase());
+    let existingCust = customersList.find(c => c.email && c.email.toLowerCase() === email.toLowerCase());
     if (existingCust) {
       existingCust.ordersCount = (existingCust.ordersCount || 1) + 1;
       existingCust.phone = phone;
@@ -838,29 +871,64 @@ document.addEventListener('DOMContentLoaded', () => {
         ordersCount: 1
       });
     }
-    localStorage.setItem('swift_jackets_customers', JSON.stringify(customersList));
+    try {
+      localStorage.setItem('swift_jackets_customers', JSON.stringify(customersList));
+    } catch (err) {}
 
-    // DISPATCH ORDER NOTIFICATION EMAIL TO aliloveff500@gmail.com
-    console.log(`[ORDER NOTIFICATION DISPATCHED to aliloveff500@gmail.com]:
-      Order ID: ${orderId}
-      Customer: ${name} (${email}, ${phone})
-      Address: ${fullAddress}
-      Product: ${currentProd.name} [Size: ${selectedSize}, Color: ${currentProd.colorName}]
-      Total: $${totalPrice}.00
-    `);
+    // Render LIVE INLINE STATUS CARD IN THE BLANK AREA BELOW BUTTON
+    if (inlineOrderStatusCard) {
+      if (inlineOrderId) inlineOrderId.textContent = orderId;
+      if (inlineOrderStatus) inlineOrderStatus.textContent = 'Pending (Received in Admin)';
+      if (inlineRecipientName) inlineRecipientName.textContent = name;
+      if (inlineContact) inlineContact.textContent = `${phone} | ${email}`;
+      if (inlineAddress) inlineAddress.textContent = fullAddress;
+      if (inlineTotal) inlineTotal.textContent = formatPKR(totalPrice);
 
-    // Update Live Status View in Cart
-    placedOrderId.textContent = orderId;
-    placedOrderStatus.textContent = 'Processing';
-    placedOrderRecipient.textContent = name;
-    placedOrderAddress.textContent = fullAddress;
-    placedOrderContact.textContent = `Phone: ${phone} | ${email}`;
-    placedOrderImg.src = currentProd.image;
-    placedOrderTitle.textContent = currentProd.name;
-    placedOrderDetails.textContent = `Color: ${currentProd.colorName} | Size: ${selectedSize} | Qty: ${cartQuantity}`;
-    placedOrderPrice.textContent = formatPKR(totalPrice);
+      // WhatsApp direct track link
+      if (inlineWhatsAppBtn) {
+        const brand = JSON.parse(localStorage.getItem('swift_brand_settings') || '{}');
+        const rawPhone = brand.supportPhone || '03079436896';
+        let cleanPhone = rawPhone.replace(/\D/g, '');
+        if (cleanPhone.startsWith('03')) cleanPhone = '92' + cleanPhone.substring(1);
+        const waMsg = encodeURIComponent(`Hello ALIZOX, I placed Order ${orderId} on Swift Jackets!\nItem: ${currentProd.name} (Size: ${selectedSize}, Color: ${currentProd.colorName})\nTotal: ${formatPKR(totalPrice)}\nCustomer: ${name} (${phone})\nPlease confirm and share tracking details.`);
+        inlineWhatsAppBtn.href = `https://wa.me/${cleanPhone}?text=${waMsg}`;
+      }
 
-    // Trigger cross-tab sync
+      inlineOrderStatusCard.style.display = 'flex';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // Update button to success state
+    if (placeOrderBtn) {
+      placeOrderBtn.innerHTML = `<span>✓ Order Placed Successfully</span><i data-lucide="check-circle" class="icon-sm"></i>`;
+      placeOrderBtn.style.background = '#10b981';
+      placeOrderBtn.style.boxShadow = '0 0 25px rgba(16, 185, 129, 0.5)';
+      placeOrderBtn.disabled = true;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // Also update View 2 for fallback
+    if (placedOrderId) placedOrderId.textContent = orderId;
+    if (placedOrderStatus) placedOrderStatus.textContent = 'Pending';
+    if (placedOrderRecipient) placedOrderRecipient.textContent = name;
+    if (placedOrderAddress) placedOrderAddress.textContent = fullAddress;
+    if (placedOrderContact) placedOrderContact.textContent = `Phone: ${phone} | ${email}`;
+    if (placedOrderImg) placedOrderImg.src = currentProd.image;
+    if (placedOrderTitle) placedOrderTitle.textContent = currentProd.name;
+    if (placedOrderDetails) placedOrderDetails.textContent = `Color: ${currentProd.colorName} | Size: ${selectedSize} | Qty: ${cartQuantity}`;
+    if (placedOrderPrice) placedOrderPrice.textContent = formatPKR(totalPrice);
+
+    // Smoothly scroll drawer down to make status card immediately visible in the blank area
+    if (cartDrawer) {
+      setTimeout(() => {
+        cartDrawer.scrollTo({
+          top: cartDrawer.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 100);
+    }
+
+    // Cross-tab sync to Admin Console
     window.dispatchEvent(new Event('storage'));
     if (typeof BroadcastChannel !== 'undefined') {
       try {
@@ -868,34 +936,45 @@ document.addEventListener('DOMContentLoaded', () => {
         ch.postMessage({ type: 'NEW_ORDER', orderId, timestamp: Date.now() });
       } catch (err) {}
     }
+  }
 
-    // Smooth transition
-    gsap.to(cartCheckoutView, {
-      opacity: 0,
-      duration: 0.25,
-      onComplete: () => {
-        cartCheckoutView.style.display = 'none';
-        orderStatusView.style.display = 'flex';
-        orderStatusView.style.opacity = '0';
-        document.getElementById('cartHeaderSubtitle').textContent = 'Order Placed & Live Tracking';
-
-        gsap.to(orderStatusView, {
-          opacity: 1,
-          duration: 0.35
-        });
-
-        if (window.lucide) lucide.createIcons();
-      }
+  // Bind both form submit AND button direct click for mobile touch compatibility
+  if (checkoutForm) {
+    checkoutForm.addEventListener('submit', handlePlaceOrder);
+  }
+  if (placeOrderBtn) {
+    placeOrderBtn.addEventListener('click', (e) => {
+      handlePlaceOrder(e);
     });
-  });
+  }
 
-  orderAnotherBtn.addEventListener('click', () => {
-    cartCheckoutView.style.display = 'flex';
-    cartCheckoutView.style.opacity = '1';
-    orderStatusView.style.display = 'none';
-    document.getElementById('cartHeaderSubtitle').textContent = 'Complete checkout below';
-    cartOverlay.classList.remove('active');
-  });
+  // Handle inline "Place Another Order" button
+  if (inlineOrderAgainBtn) {
+    inlineOrderAgainBtn.addEventListener('click', () => {
+      if (inlineOrderStatusCard) inlineOrderStatusCard.style.display = 'none';
+      if (placeOrderBtn) {
+        placeOrderBtn.innerHTML = `<span>Place Order Now</span><i data-lucide="check-circle" class="icon-sm"></i>`;
+        placeOrderBtn.style.background = '';
+        placeOrderBtn.style.boxShadow = '';
+        placeOrderBtn.disabled = false;
+      }
+      if (checkoutForm) checkoutForm.reset();
+      if (cartDrawer) {
+        cartDrawer.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      if (window.lucide) lucide.createIcons();
+    });
+  }
+
+  if (orderAnotherBtn) {
+    orderAnotherBtn.addEventListener('click', () => {
+      cartCheckoutView.style.display = 'flex';
+      cartCheckoutView.style.opacity = '1';
+      orderStatusView.style.display = 'none';
+      document.getElementById('cartHeaderSubtitle').textContent = 'Complete checkout below';
+      cartOverlay.classList.remove('active');
+    });
+  }
 
   // 14. ALL PRODUCTS MODAL / CATALOG
   function renderAllProductsCatalog() {
@@ -1128,13 +1207,68 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {}
   }
 
-  // 18. INITIALIZE APPLICATION
+  // 18. CUSTOM FLAMING CRIMSON CURSOR (Matches Reference Image)
+  function initFlameCursor() {
+    const follower = document.getElementById('flameCursorFollower');
+    const cursorImg = document.getElementById('flameCursorImg');
+    if (!follower || !cursorImg) return;
+
+    // Only enable on devices that have a precision mouse pointer (desktop/laptop)
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      follower.style.display = 'none';
+      return;
+    }
+
+    let isVisible = false;
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isVisible) {
+        isVisible = true;
+        follower.classList.add('active');
+      }
+      gsap.to(follower, {
+        x: e.clientX,
+        y: e.clientY,
+        duration: 0.08,
+        ease: 'power2.out'
+      });
+    });
+
+    document.addEventListener('mouseleave', () => {
+      follower.classList.remove('active');
+      isVisible = false;
+    });
+
+    document.addEventListener('mouseenter', () => {
+      follower.classList.add('active');
+      isVisible = true;
+    });
+
+    const clickableSelector = 'button, a, input, select, textarea, .btn, .nav-btn, .nav-item, .size-pill, .color-dot-btn, .stage-arrow-btn, .next-preview-card, .clickable, [role="button"], .order-item-card, .floating-support-btn, .whatsapp-track-btn, .order-again-inline-btn, .preview-image-wrap';
+
+    document.addEventListener('mouseover', (e) => {
+      if (e.target.closest(clickableSelector)) {
+        follower.classList.add('hovering');
+        cursorImg.src = 'assets/images/cursor_flame_pointer_large.png';
+      }
+    });
+
+    document.addEventListener('mouseout', (e) => {
+      if (e.target.closest(clickableSelector)) {
+        follower.classList.remove('hovering');
+        cursorImg.src = 'assets/images/cursor_flame_arrow_large.png';
+      }
+    });
+  }
+
+  // 19. INITIALIZE APPLICATION
   applyBrandSettings();
   initColorSwatches();
   applyProductTheme(products[0]);
   updateEditorialContent(products[0]);
   updateSizeAvailability(products[0]);
   updateAuthModalState();
+  initFlameCursor();
   if (window.lucide) {
     lucide.createIcons();
   }

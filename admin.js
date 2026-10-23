@@ -209,16 +209,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // Safe LocalStorage Getters
   function getSafeProducts() {
     try {
-      const raw = localStorage.getItem('swift_jackets_products');
+      let raw = localStorage.getItem('swift_jackets_products');
       if (!raw) {
-        localStorage.setItem('swift_jackets_products', JSON.stringify(DEFAULT_PRODUCTS));
+        raw = localStorage.getItem('swift_jackets_products_backup');
+      }
+      if (!raw) {
+        try {
+          localStorage.setItem('swift_jackets_products', JSON.stringify(DEFAULT_PRODUCTS));
+          localStorage.setItem('swift_jackets_products_backup', JSON.stringify(DEFAULT_PRODUCTS));
+        } catch (e) {}
         return DEFAULT_PRODUCTS;
       }
       const p = JSON.parse(raw);
       if (Array.isArray(p) && p.length > 0) {
         p.forEach(prod => {
-          if (prod.price < 1000) prod.price = prod.price * 100;
-          if (prod.originalPrice < 1000) prod.originalPrice = prod.originalPrice * 100;
+          if (prod.price && prod.price < 100) prod.price = prod.price * 100;
+          if (prod.originalPrice && prod.originalPrice < 100) prod.originalPrice = prod.originalPrice * 100;
           if (prod.description && prod.description.includes("It's not just about staying warm")) {
             prod.description = "Ultralight aerogel warmth. Sculpted modern silhouette.";
           } else if (prod.description && prod.description.includes("Matte obsidian finish")) {
@@ -229,10 +235,12 @@ document.addEventListener('DOMContentLoaded', () => {
             prod.description = "Windproof micro-weave. High-contrast thermal warmth.";
           }
         });
-        localStorage.setItem('swift_jackets_products', JSON.stringify(p));
+        try {
+          localStorage.setItem('swift_jackets_products', JSON.stringify(p));
+          localStorage.setItem('swift_jackets_products_backup', JSON.stringify(p));
+        } catch (e) {}
         return p;
       }
-      localStorage.setItem('swift_jackets_products', JSON.stringify(DEFAULT_PRODUCTS));
       return DEFAULT_PRODUCTS;
     } catch (e) {
       return DEFAULT_PRODUCTS;
@@ -1021,16 +1029,44 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Client-side automatic image compressor (Prevents QuotaExceededError on mobile devices)
+  function compressImageFile(file, maxWidth, maxHeight, quality, callback) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width;
+        let h = img.height;
+        if (w > maxWidth || h > maxHeight) {
+          if (w > h) {
+            h = Math.round((h * maxWidth) / w);
+            w = maxWidth;
+          } else {
+            w = Math.round((w * maxHeight) / h);
+            h = maxHeight;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const compressed = canvas.toDataURL('image/jpeg', quality);
+        callback(compressed);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
   if (prodImageFileInput) {
     prodImageFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          modalImgPreview.src = event.target.result;
-          prodImagePath.value = event.target.result;
-        };
-        reader.readAsDataURL(file);
+        compressImageFile(file, 520, 520, 0.75, (compressedDataUrl) => {
+          modalImgPreview.src = compressedDataUrl;
+          prodImagePath.value = compressedDataUrl;
+        });
       }
     });
   }
@@ -1137,7 +1173,13 @@ document.addEventListener('DOMContentLoaded', () => {
         products.push(payload);
       }
 
-      localStorage.setItem('swift_jackets_products', JSON.stringify(products));
+      try {
+        localStorage.setItem('swift_jackets_products', JSON.stringify(products));
+        localStorage.setItem('swift_jackets_products_backup', JSON.stringify(products));
+      } catch (err) {
+        console.warn('Storage save warning:', err);
+      }
+
       renderProductsTable();
       updateBadges();
       closeProdModal();
@@ -1152,7 +1194,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (confirm('Are you sure you want to remove this jacket model from the live store?')) {
       products = products.filter(p => p.id !== id);
-      localStorage.setItem('swift_jackets_products', JSON.stringify(products));
+      try {
+        localStorage.setItem('swift_jackets_products', JSON.stringify(products));
+        localStorage.setItem('swift_jackets_products_backup', JSON.stringify(products));
+      } catch (err) {}
       renderProductsTable();
       updateBadges();
       broadcastChange('PRODUCTS_UPDATED');

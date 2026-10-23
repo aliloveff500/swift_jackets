@@ -336,7 +336,7 @@
         </div>
 
         <!-- CHECKOUT INFORMATION FORM -->
-        <form class="checkout-form" id="checkoutForm" onsubmit="return false;">
+        <form class="checkout-form" id="checkoutForm">
           <div class="form-section-title">
             <i data-lucide="map-pin" class="icon-xs"></i>
             <span>Delivery & Customer Details</span>
@@ -358,7 +358,7 @@
             <!-- PHONE NUMBER -->
             <div class="form-group col-span-1">
               <label for="custPhone">Phone Number *</label>
-              <input type="tel" id="custPhone" placeholder="+92 300 1234567" required>
+              <input type="tel" id="custPhone" placeholder="03001234567" required>
             </div>
 
             <!-- CITY -->
@@ -394,6 +394,88 @@
             <i data-lucide="check-circle" class="icon-sm"></i>
           </button>
         </form>
+
+        <!-- LIVE ORDER STATUS IN BLANK AREA (Appears directly below button!) -->
+        <div class="inline-order-status-card" id="inlineOrderStatusCard" style="display: none;">
+          <div class="status-success-banner inline-banner">
+            <div class="success-icon-ring">
+              <i data-lucide="check" class="icon-md"></i>
+            </div>
+            <div>
+              <h3 class="status-title inline-title">Order Placed Successfully!</h3>
+              <p class="status-desc inline-desc">Order saved in Admin & packaging in progress.</p>
+            </div>
+          </div>
+
+          <div class="inline-tracking-box">
+            <div class="tracking-meta-row">
+              <div>
+                <span class="meta-label">ORDER ID</span>
+                <h4 class="meta-val highlight-val" id="inlineOrderId">#SJ-98241</h4>
+              </div>
+              <div>
+                <span class="meta-label">LIVE STATUS</span>
+                <span class="status-badge-live">
+                  <span class="live-dot pulse"></span>
+                  <span id="inlineOrderStatus">Pending (Received)</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- PROGRESS TRACKER -->
+            <div class="tracking-progress-steps compact">
+              <div class="step-item completed">
+                <div class="step-dot"><i data-lucide="check"></i></div>
+                <span class="step-name">Placed</span>
+              </div>
+              <div class="step-line active"></div>
+              <div class="step-item current">
+                <div class="step-dot"><i data-lucide="package"></i></div>
+                <span class="step-name">Packaging</span>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-item">
+                <div class="step-dot"><i data-lucide="truck"></i></div>
+                <span class="step-name">Shipped</span>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-item">
+                <div class="step-dot"><i data-lucide="home"></i></div>
+                <span class="step-name">Delivered</span>
+              </div>
+            </div>
+
+            <div class="inline-recap-summary">
+              <div class="recap-line">
+                <span class="recap-lbl">Recipient:</span>
+                <span class="recap-val" id="inlineRecipientName">Ali Ff</span>
+              </div>
+              <div class="recap-line">
+                <span class="recap-lbl">Contact:</span>
+                <span class="recap-val" id="inlineContact">32222222</span>
+              </div>
+              <div class="recap-line">
+                <span class="recap-lbl">Address:</span>
+                <span class="recap-val" id="inlineAddress">House dqws, Ismail pura, Lahore</span>
+              </div>
+              <div class="recap-line">
+                <span class="recap-lbl">Total:</span>
+                <span class="recap-val highlight-pkr" id="inlineTotal">PKR 5,999</span>
+              </div>
+            </div>
+
+            <div class="inline-action-buttons">
+              <a href="#" target="_blank" class="whatsapp-track-btn" id="inlineWhatsAppBtn">
+                <i data-lucide="message-circle" class="icon-sm"></i>
+                <span>Track on WhatsApp</span>
+              </a>
+              <button type="button" class="order-again-inline-btn" id="inlineOrderAgainBtn">
+                <i data-lucide="rotate-ccw" class="icon-xs"></i>
+                <span>Place Another Order</span>
+              </button>
+            </div>
+          </div>
+        </div>
 
       </div>
 
@@ -567,6 +649,12 @@
         <button class="cta-primary" id="aboutCloseCta">Explore Collection</button>
       </div>
     </div>
+  </div>
+
+  <!-- LUXURY FLAMING CRIMSON CURSOR FOLLOWER (Matches Reference Image) -->
+  <div class="flame-cursor-follower" id="flameCursorFollower" aria-hidden="true">
+    <img src="assets/images/cursor_flame_arrow_large.png" alt="Flame Cursor" id="flameCursorImg" class="cursor-flame-img">
+    <div class="cursor-flame-glow"></div>
   </div>
 
   <!-- FLYING CART ANIMATION CONTAINER -->
