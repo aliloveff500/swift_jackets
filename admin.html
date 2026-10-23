@@ -26,14 +26,18 @@
       </div>
       <p class="gate-subtitle">Enter your credentials to access the central store controller.</p>
 
-      <form id="adminLoginForm" onsubmit="return false;">
+      <form id="adminLoginForm" onsubmit="return false;" autocomplete="off">
+        <!-- Decoy hidden fields to block browser credential autofill -->
+        <input type="text" style="display:none;" aria-hidden="true" tabindex="-1">
+        <input type="password" style="display:none;" aria-hidden="true" tabindex="-1">
+        
         <div class="form-group">
           <label for="adminUsername">Username</label>
-          <input type="text" id="adminUsername" placeholder="Enter username" autocomplete="off" required>
+          <input type="text" id="adminUsername" placeholder="Enter username" autocomplete="new-password" value="" readonly onfocus="this.removeAttribute('readonly');" required>
         </div>
         <div class="form-group">
           <label for="adminPassword">Password</label>
-          <input type="password" id="adminPassword" placeholder="Enter password" autocomplete="off" required>
+          <input type="password" id="adminPassword" placeholder="Enter password" autocomplete="new-password" value="" readonly onfocus="this.removeAttribute('readonly');" required>
         </div>
         <div id="loginErrorMsg" class="login-error-text" style="display: none;">Invalid username or password.</div>
         <button type="submit" class="gate-btn" id="adminLoginBtn">
@@ -143,6 +147,10 @@
       </div>
 
       <div class="header-right">
+        <button class="sync-devices-btn" id="openSyncModalBtn" title="Sync changes between PC and Mobile">
+          <i data-lucide="smartphone" class="icon-xs"></i>
+          <span>Sync PC & Mobile</span>
+        </button>
         <button class="reset-data-btn" id="resetCatalogDefaultsBtn" title="Restore factory products">
           <i data-lucide="rotate-ccw" class="icon-xs"></i>
           <span>Reset</span>
@@ -651,6 +659,104 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- CROSS-DEVICE SYNC MODAL (PC <-> MOBILE) -->
+  <div class="admin-modal-overlay" id="syncModal">
+    <div class="product-modal-card" style="max-width: 680px; padding: 2rem;">
+      <div class="modal-head">
+        <div>
+          <h2>Cross-Device Sync Hub</h2>
+          <p style="font-size: 0.85rem; color: var(--admin-text-muted); margin-top: 0.2rem;">
+            Real-time synchronization between PC &amp; Mobile devices
+          </p>
+        </div>
+        <button class="modal-close-btn" id="closeSyncModal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="sync-modal-body" style="display: flex; flex-direction: column; gap: 1.5rem; overflow-y: auto; max-height: 70vh; padding-right: 0.5rem; margin-top: 1rem;">
+        
+        <!-- SECTION 1: INSTANT QR CODE & 1-CLICK LINK -->
+        <div class="sync-card-box">
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1rem; color: #38bdf8;">
+            <i data-lucide="qr-code" class="icon-sm"></i>
+            <span>1. Instant QR Code / 1-Click Sync Link</span>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--admin-text-muted); margin-top: 0.4rem; line-height: 1.5;">
+            Point your mobile camera at this QR code, or copy the link below. Opening it on your phone or PC instantly syncs all jackets, prices, stock, and brand settings in 1 second!
+          </p>
+
+          <div style="display: flex; gap: 1.5rem; align-items: center; margin-top: 1rem; flex-wrap: wrap;">
+            <div style="background: #ffffff; padding: 12px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); display: inline-block;">
+              <img id="syncQrImg" src="" alt="Sync QR Code" style="width: 160px; height: 160px; display: block; border-radius: 6px;">
+            </div>
+            <div style="flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 0.75rem;">
+              <button type="button" class="action-primary-btn" id="generateSyncLinkBtn">
+                <i data-lucide="refresh-cw" class="icon-xs"></i>
+                <span>Generate / Refresh QR Code</span>
+              </button>
+              <button type="button" class="btn-cancel" id="copySyncLinkBtn" style="color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                <i data-lucide="copy" class="icon-xs"></i>
+                <span id="copySyncLinkText">Copy 1-Click Sync Link</span>
+              </button>
+              <div id="syncFeedbackAlert" style="font-size: 0.82rem; color: #10b981; display: none; font-weight: 600;">
+                ✓ Copied! Open this link on your other device to sync instantly.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: CLOUD DATABASE AUTO-SYNC -->
+        <div class="sync-card-box">
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1rem; color: #10b981;">
+            <i data-lucide="cloud" class="icon-sm"></i>
+            <span>2. Cloud Server Sync (Push / Pull)</span>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--admin-text-muted); margin-top: 0.4rem; line-height: 1.5;">
+            Push all changes to the cloud endpoint so any device opening the site automatically downloads the latest catalog without needing manual sync.
+          </p>
+          
+          <div style="display: flex; gap: 0.8rem; margin-top: 1rem; flex-wrap: wrap;">
+            <button type="button" class="action-primary-btn" id="pushToCloudBtn" style="flex: 1; background: #10b981;">
+              <i data-lucide="upload-cloud" class="icon-xs"></i>
+              <span>Push Changes to Cloud</span>
+            </button>
+            <button type="button" class="btn-cancel" id="pullFromCloudBtn" style="flex: 1; color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+              <i data-lucide="download-cloud" class="icon-xs"></i>
+              <span>Pull from Cloud</span>
+            </button>
+          </div>
+          <div id="cloudStatusMsg" style="font-size: 0.82rem; margin-top: 0.6rem; color: var(--admin-text-dim);">
+            Cloud Status: Ready (Vercel &amp; InfinityFree compatible)
+          </div>
+        </div>
+
+        <!-- SECTION 3: BACKUP CODE (EXPORT / RESTORE) -->
+        <div class="sync-card-box">
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1rem; color: #f59e0b;">
+            <i data-lucide="database" class="icon-sm"></i>
+            <span>3. Transfer Code (Export / Import Backup)</span>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--admin-text-muted); margin-top: 0.4rem;">
+            Copy your store backup code to save offline or paste a backup code from another device.
+          </p>
+          <textarea id="syncCodeArea" rows="3" style="width: 100%; margin-top: 0.6rem; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #cbd5e1; font-family: monospace; font-size: 0.75rem; padding: 0.7rem; resize: none;" placeholder="Store backup code..."></textarea>
+          <div style="display: flex; gap: 0.8rem; margin-top: 0.7rem; flex-wrap: wrap;">
+            <button type="button" class="btn-cancel" id="copyStoreCodeBtn" style="flex: 1; color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+              <i data-lucide="clipboard" class="icon-xs"></i>
+              <span>Copy Backup Code</span>
+            </button>
+            <button type="button" class="action-primary-btn" id="restoreStoreCodeBtn" style="flex: 1; background: #f59e0b;">
+              <i data-lucide="check" class="icon-xs"></i>
+              <span>Restore from Code</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 

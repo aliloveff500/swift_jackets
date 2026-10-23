@@ -416,6 +416,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelOtpBtn = document.getElementById('cancelOtpBtn');
   const doneSecBtn = document.getElementById('doneSecBtn');
 
+  // Cross-Device Sync Modal Elements
+  const syncModal = document.getElementById('syncModal');
+  const openSyncModalBtn = document.getElementById('openSyncModalBtn');
+  const closeSyncModal = document.getElementById('closeSyncModal');
+  const syncQrImg = document.getElementById('syncQrImg');
+  const generateSyncLinkBtn = document.getElementById('generateSyncLinkBtn');
+  const copySyncLinkBtn = document.getElementById('copySyncLinkBtn');
+  const copySyncLinkText = document.getElementById('copySyncLinkText');
+  const syncFeedbackAlert = document.getElementById('syncFeedbackAlert');
+  const pushToCloudBtn = document.getElementById('pushToCloudBtn');
+  const pullFromCloudBtn = document.getElementById('pullFromCloudBtn');
+  const cloudStatusMsg = document.getElementById('cloudStatusMsg');
+  const syncCodeArea = document.getElementById('syncCodeArea');
+  const copyStoreCodeBtn = document.getElementById('copyStoreCodeBtn');
+  const restoreStoreCodeBtn = document.getElementById('restoreStoreCodeBtn');
+
   // =================================================================
   // 3. STATE & CROSS-TAB SYNC
   // =================================================================
@@ -772,16 +788,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const newStatus = e.target.value;
         orders[index].status = newStatus;
         localStorage.setItem('swift_jackets_orders', JSON.stringify(orders));
+        localStorage.setItem('swift_jackets_orders_backup', JSON.stringify(orders));
         broadcastChange('ORDER_STATUS_CHANGED', { orderId: ord.orderId, status: newStatus });
+        autoPushToCloud();
       });
 
       tr.querySelector('.delete-order-btn').addEventListener('click', () => {
         if (confirm(`Delete order ${ord.orderId}?`)) {
           orders.splice(index, 1);
           localStorage.setItem('swift_jackets_orders', JSON.stringify(orders));
+          localStorage.setItem('swift_jackets_orders_backup', JSON.stringify(orders));
           renderOrdersTable();
           updateBadges();
           broadcastChange('ORDERS_UPDATED');
+          autoPushToCloud();
         }
       });
 
@@ -1012,7 +1032,10 @@ document.addEventListener('DOMContentLoaded', () => {
         logoChoice: choice ? choice.value : 'thunderbolt'
       };
       localStorage.setItem('swift_brand_settings', JSON.stringify(brandSettings));
+      localStorage.setItem('swift_brand_backup', JSON.stringify(brandSettings));
+      localStorage.setItem('swift_has_user_changes', 'true');
       broadcastChange('BRAND_UPDATED', brandSettings);
+      autoPushToCloud();
       alert('Brand settings updated and synchronized to storefront!');
     });
   }
@@ -1176,6 +1199,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         localStorage.setItem('swift_jackets_products', JSON.stringify(products));
         localStorage.setItem('swift_jackets_products_backup', JSON.stringify(products));
+        localStorage.setItem('swift_has_user_changes', 'true');
       } catch (err) {
         console.warn('Storage save warning:', err);
       }
@@ -1184,6 +1208,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateBadges();
       closeProdModal();
       broadcastChange('PRODUCTS_UPDATED');
+      autoPushToCloud();
     });
   }
 
@@ -1197,10 +1222,12 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         localStorage.setItem('swift_jackets_products', JSON.stringify(products));
         localStorage.setItem('swift_jackets_products_backup', JSON.stringify(products));
+        localStorage.setItem('swift_has_user_changes', 'true');
       } catch (err) {}
       renderProductsTable();
       updateBadges();
       broadcastChange('PRODUCTS_UPDATED');
+      autoPushToCloud();
     }
   }
 
@@ -1264,6 +1291,329 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // =================================================================
+  // 6.5 CROSS-DEVICE CLOUD & QR SYNCHRONIZATION ENGINE
+  // =================================================================
+  async function autoPushToCloud(silent = true) {
+    const payload = {
+      updatedAt: Date.now(),
+      brand: brandSettings,
+      products: products,
+      orders: orders,
+      customers: customers
+    };
+
+    try {
+      localStorage.setItem('swift_has_user_changes', 'true');
+      localStorage.setItem('swift_last_sync_time', payload.updatedAt.toString());
+    } catch(e) {}
+
+    // 1. Push to PHP endpoint (for InfinityFree / kesug.com)
+    try {
+      fetch('sync.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+    } catch(e) {}
+
+    // 2. Push to Vercel Serverless API (/api/sync)
+    try {
+      fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+    } catch(e) {}
+
+    if (!silent && cloudStatusMsg) {
+      cloudStatusMsg.textContent = `✓ Successfully pushed to cloud at ${new Date().toLocaleTimeString()}!`;
+      cloudStatusMsg.style.color = '#10b981';
+    }
+  }
+
+  async function pullFromCloud(manual = true) {
+    if (cloudStatusMsg) {
+      cloudStatusMsg.textContent = 'Fetching latest cloud state...';
+      cloudStatusMsg.style.color = '#38bdf8';
+    }
+
+    let cloudData = null;
+    const endpoints = ['sync.php', '/api/sync', 'data/store_data.json'];
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep, { cache: 'no-store' });
+        if (res && res.ok) {
+          const json = await res.json();
+          if (json && Array.isArray(json.products) && json.products.length > 0) {
+            cloudData = json;
+            break;
+          }
+        }
+      } catch(e) {}
+    }
+
+    if (cloudData) {
+      products = cloudData.products;
+      localStorage.setItem('swift_jackets_products', JSON.stringify(products));
+      localStorage.setItem('swift_jackets_products_backup', JSON.stringify(products));
+      localStorage.setItem('swift_has_user_changes', 'true');
+      if (cloudData.brand) {
+        brandSettings = { ...DEFAULT_BRAND, ...cloudData.brand };
+        localStorage.setItem('swift_brand_settings', JSON.stringify(brandSettings));
+        localStorage.setItem('swift_brand_backup', JSON.stringify(brandSettings));
+        populateBrandForm();
+      }
+      if (cloudData.orders && Array.isArray(cloudData.orders)) {
+        orders = cloudData.orders;
+        localStorage.setItem('swift_jackets_orders', JSON.stringify(orders));
+        localStorage.setItem('swift_jackets_orders_backup', JSON.stringify(orders));
+        renderOrdersTable();
+      }
+      renderProductsTable();
+      updateBadges();
+      broadcastChange('ALL_SYNCED');
+
+      if (cloudStatusMsg) {
+        cloudStatusMsg.textContent = `✓ Synchronized with cloud (${products.length} products loaded)!`;
+        cloudStatusMsg.style.color = '#10b981';
+      }
+      if (manual) alert(`✓ Cloud Sync Successful!\nLoaded ${products.length} jackets and store settings.`);
+    } else {
+      if (cloudStatusMsg) {
+        cloudStatusMsg.textContent = 'Notice: No newer cloud updates found. Local store is up to date.';
+        cloudStatusMsg.style.color = 'var(--admin-text-dim)';
+      }
+      if (manual) alert('Local store is already up to date!');
+    }
+  }
+
+  function generateSyncQrAndLink() {
+    const compactProducts = products.map(p => ({
+      id: p.id,
+      name: p.name,
+      colorName: p.colorName,
+      hex: p.hex,
+      gradient: p.gradient,
+      themeGlow: p.themeGlow,
+      themeClass: p.themeClass,
+      price: p.price,
+      originalPrice: p.originalPrice,
+      discount: p.discount,
+      condition: p.condition,
+      stockAvailable: p.stockAvailable,
+      itemsSold: p.itemsSold,
+      availableSizes: p.availableSizes,
+      tag: p.tag,
+      headline: p.headline,
+      headlineLight: p.headlineLight,
+      tagline: p.tagline,
+      description: p.description,
+      tech: p.tech,
+      image: p.image
+    }));
+
+    const syncPayload = {
+      t: Date.now(),
+      b: brandSettings,
+      p: compactProducts
+    };
+
+    const jsonStr = JSON.stringify(syncPayload);
+    if (syncCodeArea) {
+      syncCodeArea.value = jsonStr;
+    }
+
+    try {
+      const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+      const syncUrl = `${window.location.origin}${window.location.pathname}?sync_data=${encodeURIComponent(b64)}`;
+      if (syncQrImg) {
+        syncQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(syncUrl)}`;
+      }
+      return syncUrl;
+    } catch(err) {
+      console.warn('QR link generation warning:', err);
+      return '';
+    }
+  }
+
+  function checkUrlSyncParam() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const syncData = params.get('sync_data');
+      if (syncData) {
+        const jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(syncData))));
+        const parsed = JSON.parse(jsonStr);
+        if (parsed && Array.isArray(parsed.p) && parsed.p.length > 0) {
+          products = parsed.p;
+          localStorage.setItem('swift_jackets_products', JSON.stringify(products));
+          localStorage.setItem('swift_jackets_products_backup', JSON.stringify(products));
+          localStorage.setItem('swift_has_user_changes', 'true');
+          if (parsed.b) {
+            brandSettings = { ...DEFAULT_BRAND, ...parsed.b };
+            localStorage.setItem('swift_brand_settings', JSON.stringify(brandSettings));
+            localStorage.setItem('swift_brand_backup', JSON.stringify(brandSettings));
+          }
+          window.history.replaceState({}, document.title, window.location.pathname);
+          alert('🎉 Synchronization Complete! This device now has the latest store catalog & settings.');
+          window.location.reload();
+        }
+      }
+    } catch (e) {
+      console.warn('Sync URL check error:', e);
+    }
+  }
+
+  async function syncFromCloudOnBoot() {
+    try {
+      let res = null;
+      try { res = await fetch('sync.php', { cache: 'no-store' }); } catch(e) {}
+      if (!res || !res.ok) {
+        try { res = await fetch('/api/sync', { cache: 'no-store' }); } catch(e) {}
+      }
+      if (!res || !res.ok) {
+        try { res = await fetch('data/store_data.json', { cache: 'no-store' }); } catch(e) {}
+      }
+      if (res && res.ok) {
+        const cloudData = await res.json();
+        if (cloudData && Array.isArray(cloudData.products) && cloudData.products.length > 0) {
+          const localTime = parseInt(localStorage.getItem('swift_last_sync_time') || '0');
+          const cloudTime = parseInt(cloudData.updatedAt || '0');
+          if (cloudTime > localTime || !localStorage.getItem('swift_has_user_changes')) {
+            products = cloudData.products;
+            localStorage.setItem('swift_jackets_products', JSON.stringify(products));
+            localStorage.setItem('swift_jackets_products_backup', JSON.stringify(products));
+            localStorage.setItem('swift_last_sync_time', cloudTime.toString());
+            if (cloudData.brand) {
+              brandSettings = { ...DEFAULT_BRAND, ...cloudData.brand };
+              localStorage.setItem('swift_brand_settings', JSON.stringify(brandSettings));
+              localStorage.setItem('swift_brand_backup', JSON.stringify(brandSettings));
+              populateBrandForm();
+            }
+            renderProductsTable();
+            updateBadges();
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Sync Modal Open / Close
+  function openSyncModalHandler() {
+    if (syncModal) syncModal.classList.add('active');
+    generateSyncQrAndLink();
+    refreshIcons();
+  }
+
+  function closeSyncModalHandler() {
+    if (syncModal) syncModal.classList.remove('active');
+  }
+
+  if (openSyncModalBtn) openSyncModalBtn.addEventListener('click', openSyncModalHandler);
+  if (closeSyncModal) closeSyncModal.addEventListener('click', closeSyncModalHandler);
+
+  if (generateSyncLinkBtn) {
+    generateSyncLinkBtn.addEventListener('click', () => {
+      generateSyncQrAndLink();
+      if (syncFeedbackAlert) {
+        syncFeedbackAlert.textContent = '✓ QR Code & Sync Link Refreshed with latest changes!';
+        syncFeedbackAlert.style.display = 'block';
+        setTimeout(() => { syncFeedbackAlert.style.display = 'none'; }, 4000);
+      }
+    });
+  }
+
+  if (copySyncLinkBtn) {
+    copySyncLinkBtn.addEventListener('click', () => {
+      const url = generateSyncQrAndLink();
+      if (url && navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+          if (copySyncLinkText) copySyncLinkText.textContent = 'Copied to Clipboard!';
+          if (syncFeedbackAlert) {
+            syncFeedbackAlert.textContent = '✓ Link copied! Open this URL on your phone or PC to sync.';
+            syncFeedbackAlert.style.display = 'block';
+          }
+          setTimeout(() => {
+            if (copySyncLinkText) copySyncLinkText.textContent = 'Copy 1-Click Sync Link';
+            if (syncFeedbackAlert) syncFeedbackAlert.style.display = 'none';
+          }, 3500);
+        }).catch(() => {
+          prompt('Copy this sync link:', url);
+        });
+      } else {
+        prompt('Copy this sync link:', url);
+      }
+    });
+  }
+
+  if (pushToCloudBtn) {
+    pushToCloudBtn.addEventListener('click', async () => {
+      pushToCloudBtn.disabled = true;
+      pushToCloudBtn.innerHTML = '<span>Pushing to Cloud...</span>';
+      await autoPushToCloud(false);
+      pushToCloudBtn.disabled = false;
+      pushToCloudBtn.innerHTML = '<i data-lucide="upload-cloud" class="icon-xs"></i><span>Push Changes to Cloud</span>';
+      refreshIcons();
+    });
+  }
+
+  if (pullFromCloudBtn) {
+    pullFromCloudBtn.addEventListener('click', async () => {
+      pullFromCloudBtn.disabled = true;
+      pullFromCloudBtn.innerHTML = '<span>Fetching from Cloud...</span>';
+      await pullFromCloud(true);
+      pullFromCloudBtn.disabled = false;
+      pullFromCloudBtn.innerHTML = '<i data-lucide="download-cloud" class="icon-xs"></i><span>Pull from Cloud</span>';
+      refreshIcons();
+    });
+  }
+
+  if (copyStoreCodeBtn) {
+    copyStoreCodeBtn.addEventListener('click', () => {
+      if (syncCodeArea && syncCodeArea.value) {
+        navigator.clipboard.writeText(syncCodeArea.value).then(() => {
+          alert('Backup code copied to clipboard!');
+        }).catch(() => {
+          syncCodeArea.select();
+        });
+      }
+    });
+  }
+
+  if (restoreStoreCodeBtn) {
+    restoreStoreCodeBtn.addEventListener('click', () => {
+      if (!syncCodeArea || !syncCodeArea.value.trim()) {
+        alert('Please paste a valid store backup code into the box first.');
+        return;
+      }
+      try {
+        const parsed = JSON.parse(syncCodeArea.value.trim());
+        const prods = parsed.p || parsed.products;
+        if (Array.isArray(prods) && prods.length > 0) {
+          products = prods;
+          localStorage.setItem('swift_jackets_products', JSON.stringify(products));
+          localStorage.setItem('swift_jackets_products_backup', JSON.stringify(products));
+          localStorage.setItem('swift_has_user_changes', 'true');
+          if (parsed.b || parsed.brand) {
+            brandSettings = { ...DEFAULT_BRAND, ...(parsed.b || parsed.brand) };
+            localStorage.setItem('swift_brand_settings', JSON.stringify(brandSettings));
+            localStorage.setItem('swift_brand_backup', JSON.stringify(brandSettings));
+            populateBrandForm();
+          }
+          renderProductsTable();
+          updateBadges();
+          broadcastChange('ALL_SYNCED');
+          alert('✓ Store successfully restored from backup code!');
+          closeSyncModalHandler();
+        } else {
+          alert('Invalid backup code format: Missing products catalog.');
+        }
+      } catch (err) {
+        alert('Invalid JSON backup code. Please check that you copied the complete code.');
+      }
+    });
+  }
+
+  // =================================================================
   // 7. INITIAL BOOT & DISPLAY FUNCTIONS (Called at bottom)
   // =================================================================
   function showAdminDashboard() {
@@ -1285,23 +1635,36 @@ document.addEventListener('DOMContentLoaded', () => {
   function showAuthGate() {
     if (authGate) authGate.style.display = 'flex';
     if (adminWrapper) adminWrapper.style.display = 'none';
-    if (adminUsernameInput) adminUsernameInput.value = '';
-    if (adminPasswordInput) adminPasswordInput.value = '';
+    if (adminUsernameInput) {
+      adminUsernameInput.value = '';
+      adminUsernameInput.setAttribute('readonly', 'readonly');
+    }
+    if (adminPasswordInput) {
+      adminPasswordInput.value = '';
+      adminPasswordInput.setAttribute('readonly', 'readonly');
+    }
     if (loginErrorMsg) loginErrorMsg.style.display = 'none';
+    setTimeout(() => {
+      if (adminUsernameInput) adminUsernameInput.value = '';
+      if (adminPasswordInput) adminPasswordInput.value = '';
+    }, 150);
     refreshIcons();
   }
 
   // Check login state
   try {
-    if (localStorage.getItem('swift_admin_logged_in') === 'true' || sessionStorage.getItem('swift_admin_logged_in') === 'true') {
+    if (sessionStorage.getItem('swift_admin_logged_in') === 'true') {
       showAdminDashboard();
     } else {
       showAuthGate();
     }
   } catch (err) {
-    console.error('Fatal boot error in admin:', err);
-    showAdminDashboard();
+    showAuthGate();
   }
+
+  // Check URL sync parameter and cloud updates on boot
+  checkUrlSyncParam();
+  syncFromCloudOnBoot();
 
   // Cross-tab storage listener
   if (syncChannel) {

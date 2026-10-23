@@ -1207,68 +1207,71 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {}
   }
 
-  // 18. CUSTOM FLAMING CRIMSON CURSOR (Matches Reference Image)
-  function initFlameCursor() {
-    const follower = document.getElementById('flameCursorFollower');
-    const cursorImg = document.getElementById('flameCursorImg');
-    if (!follower || !cursorImg) return;
-
-    // Only enable on devices that have a precision mouse pointer (desktop/laptop)
-    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-      follower.style.display = 'none';
-      return;
+  // 17.5 CROSS-DEVICE CLOUD & URL SYNC ENGINE
+  function checkUrlSyncParam() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const syncData = params.get('sync_data');
+      if (syncData) {
+        const jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(syncData))));
+        const parsed = JSON.parse(jsonStr);
+        if (parsed && Array.isArray(parsed.p) && parsed.p.length > 0) {
+          localStorage.setItem('swift_jackets_products', JSON.stringify(parsed.p));
+          localStorage.setItem('swift_jackets_products_backup', JSON.stringify(parsed.p));
+          localStorage.setItem('swift_has_user_changes', 'true');
+          if (parsed.b) {
+            localStorage.setItem('swift_brand_settings', JSON.stringify(parsed.b));
+            localStorage.setItem('swift_brand_backup', JSON.stringify(parsed.b));
+          }
+          window.history.replaceState({}, document.title, window.location.pathname);
+          alert('🎉 Store Synced Successfully! All products & prices updated on this device.');
+          window.location.reload();
+        }
+      }
+    } catch (e) {
+      console.warn('URL sync error:', e);
     }
-
-    let isVisible = false;
-
-    window.addEventListener('mousemove', (e) => {
-      if (!isVisible) {
-        isVisible = true;
-        follower.classList.add('active');
-      }
-      gsap.to(follower, {
-        x: e.clientX,
-        y: e.clientY,
-        duration: 0.08,
-        ease: 'power2.out'
-      });
-    });
-
-    document.addEventListener('mouseleave', () => {
-      follower.classList.remove('active');
-      isVisible = false;
-    });
-
-    document.addEventListener('mouseenter', () => {
-      follower.classList.add('active');
-      isVisible = true;
-    });
-
-    const clickableSelector = 'button, a, input, select, textarea, .btn, .nav-btn, .nav-item, .size-pill, .color-dot-btn, .stage-arrow-btn, .next-preview-card, .clickable, [role="button"], .order-item-card, .floating-support-btn, .whatsapp-track-btn, .order-again-inline-btn, .preview-image-wrap';
-
-    document.addEventListener('mouseover', (e) => {
-      if (e.target.closest(clickableSelector)) {
-        follower.classList.add('hovering');
-        cursorImg.src = 'assets/images/cursor_flame_pointer_large.png';
-      }
-    });
-
-    document.addEventListener('mouseout', (e) => {
-      if (e.target.closest(clickableSelector)) {
-        follower.classList.remove('hovering');
-        cursorImg.src = 'assets/images/cursor_flame_arrow_large.png';
-      }
-    });
   }
 
-  // 19. INITIALIZE APPLICATION
+  async function checkCloudUpdates() {
+    try {
+      let res = null;
+      try { res = await fetch('sync.php', { cache: 'no-store' }); } catch(e) {}
+      if (!res || !res.ok) {
+        try { res = await fetch('/api/sync', { cache: 'no-store' }); } catch(e) {}
+      }
+      if (!res || !res.ok) {
+        try { res = await fetch('data/store_data.json', { cache: 'no-store' }); } catch(e) {}
+      }
+      if (res && res.ok) {
+        const cloudData = await res.json();
+        if (cloudData && Array.isArray(cloudData.products) && cloudData.products.length > 0) {
+          const localTime = parseInt(localStorage.getItem('swift_last_sync_time') || '0');
+          const cloudTime = parseInt(cloudData.updatedAt || '0');
+          if (cloudTime > localTime || !localStorage.getItem('swift_has_user_changes')) {
+            localStorage.setItem('swift_jackets_products', JSON.stringify(cloudData.products));
+            localStorage.setItem('swift_jackets_products_backup', JSON.stringify(cloudData.products));
+            localStorage.setItem('swift_last_sync_time', cloudTime.toString());
+            if (cloudData.brand) {
+              localStorage.setItem('swift_brand_settings', JSON.stringify(cloudData.brand));
+              localStorage.setItem('swift_brand_backup', JSON.stringify(cloudData.brand));
+            }
+            reloadStoreFromStorage();
+          }
+        }
+      }
+    } catch (err) {}
+  }
+
+  // 18. INITIALIZE APPLICATION
+  checkUrlSyncParam();
   applyBrandSettings();
   initColorSwatches();
   applyProductTheme(products[0]);
   updateEditorialContent(products[0]);
   updateSizeAvailability(products[0]);
   updateAuthModalState();
-  initFlameCursor();
+  checkCloudUpdates();
   if (window.lucide) {
     lucide.createIcons();
   }
