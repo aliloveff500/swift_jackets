@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://swiftjackets.vercel.app/</loc>
+    <lastmod>2026-10-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://swiftjackets.vercel.app/assets/images/jacket_orange.png</image:loc>
+      <image:title>Swift Jackets â€” Luxury Puffer Jacket Solar Ember</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://swiftjackets.vercel.app/assets/images/jacket_black.png</image:loc>
+      <image:title>Swift Jackets â€” Stealth Obsidian Puffer Jacket</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://swiftjackets.vercel.app/assets/images/jacket_white.png</image:loc>
+      <image:title>Swift Jackets â€” Glacier Pearl Puffer Jacket</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://swiftjackets.vercel.app/assets/images/jacket_red.png</image:loc>
+      <image:title>Swift Jackets â€” Crimson Ruby Velvet Blaze</image:title>
+    </image:image>
+  </url>
+</urlset>
