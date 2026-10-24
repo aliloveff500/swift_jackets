@@ -1,5 +1,5 @@
 /* ===================================================================
-   SWIFT JACKETS â€” LUXURY MINIMALIST STYLESHEET
+   SWIFT JACKETS — LUXURY MINIMALIST STYLESHEET
    Dynamic Color Morphing, 3D Floating Showcase, Glassmorphic UI
 =================================================================== */
 
@@ -265,34 +265,521 @@ html, body {
   box-shadow: 0 0 16px rgba(255, 106, 43, 0.4);
 }
 
-.cart-btn {
-  padding: 0.6rem 0.9rem;
+/* ===================================================================
+   JITTER ANIMATED TYPEWRITER SEARCH BAR (Exact Video 1 Match)
+=================================================================== */
+.jitter-search-wrap {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  z-index: 45;
 }
 
-.cart-icon-wrap {
+.jitter-search-pill {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.65rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-full);
+  height: 44px;
+  width: 250px;
+  padding: 0 1rem;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.3s ease,
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+  cursor: text;
 }
 
-.cart-badge {
+.jitter-search-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+
+.jitter-search-pill.is-active,
+.jitter-search-pill:focus-within {
+  width: 320px;
+  background: rgba(25, 25, 32, 0.94);
+  border-color: var(--theme-primary, #ff6a2b);
+  box-shadow: 0 0 25px var(--theme-glow), 0 8px 30px rgba(0, 0, 0, 0.55);
+}
+
+.jitter-search-icon {
+  width: 17px;
+  height: 17px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.jitter-search-pill:focus-within .jitter-search-icon {
+  color: var(--theme-primary, #ff6a2b);
+  transform: scale(1.1);
+}
+
+.jitter-typewriter-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+.jitter-search-input {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 0;
+  z-index: 2;
+}
+
+.jitter-typewriter-text {
   position: absolute;
-  top: -8px;
-  right: -10px;
-  background: var(--theme-primary);
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 800;
-  width: 19px;
-  height: 19px;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.75);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 500;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 1;
+  transition: opacity 0.2s ease;
+}
+
+.jitter-typewriter-cursor {
+  position: absolute;
+  color: var(--theme-primary, #ff6a2b);
+  font-weight: 700;
+  font-size: 0.95rem;
+  pointer-events: none;
+  animation: jitterCursorBlink 0.8s infinite;
+  z-index: 1;
+  margin-left: 2px;
+}
+
+@keyframes jitterCursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.jitter-search-clear {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: var(--text-muted);
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px var(--theme-glow);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.jitter-search-clear:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+/* FLOATING SEARCH RESULTS DROPDOWN */
+.jitter-search-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 360px;
+  max-height: 440px;
+  background: rgba(18, 18, 24, 0.97);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
+  z-index: 100;
+}
+
+.jitter-search-dropdown.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.jitter-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.15rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.jitter-dropdown-header .dropdown-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.jitter-dropdown-header .dropdown-count {
+  font-size: 0.75rem;
+  color: var(--theme-primary, #ff6a2b);
+  font-weight: 700;
+}
+
+.jitter-results-list {
+  padding: 0.5rem;
+  overflow-y: auto;
+  max-height: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.jitter-result-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.jitter-result-card:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateX(4px);
+}
+
+.jitter-result-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 4px;
+}
+
+.jitter-result-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.jitter-result-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.jitter-result-name {
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jitter-result-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.jitter-result-color {
+  color: var(--text-muted);
+}
+
+.jitter-result-price {
+  color: var(--theme-primary, #ff6a2b);
+  font-weight: 700;
+}
+
+.jitter-result-action {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.jitter-result-card:hover .jitter-result-action {
+  background: var(--theme-primary, #ff6a2b);
+  color: #0b0b0e;
+  border-color: var(--theme-primary, #ff6a2b);
+}
+
+.jitter-no-results {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+/* ===================================================================
+   JITTER MORPHING CART BUTTON (Exact Video 2 Match)
+=================================================================== */
+.jitter-cart-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  min-width: 140px;
+  border-radius: var(--radius-full);
+  background: #ffd200; /* Video 2 bright energetic yellow */
+  color: #000000;
+  border: none;
+  cursor: pointer;
+  padding: 0 1.2rem;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 18px rgba(255, 210, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: background 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.25s ease;
+  overflow: hidden;
+}
+
+.jitter-cart-pill:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 26px rgba(255, 210, 0, 0.5), 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+.jitter-cart-pill:active {
+  transform: scale(0.97);
+}
+
+/* MORPHED STATE: DEEP OBSIDIAN BLACK (Video 2 Frame 00:03) */
+.jitter-cart-pill.is-checkout-state {
+  background: #09090c !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+}
+
+.jitter-pill-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jitter-stage-view {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.35s ease;
+}
+
+.jitter-stage-checkout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  opacity: 0;
+  transform: translateY(20px) scale(0.9);
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.35s ease;
+  white-space: nowrap;
+}
+
+.jitter-cart-pill.is-checkout-state .jitter-stage-view {
+  opacity: 0;
+  transform: translateY(-20px) scale(0.9);
+  pointer-events: none;
+}
+
+.jitter-cart-pill.is-checkout-state .jitter-stage-checkout {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* CIRCULAR COUNTER BADGE (Video 2: Solid black circle with white text) */
+.jitter-counter-badge {
+  background: #000000;
+  color: #ffffff;
+  border-radius: 50%;
+  min-width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 0 4px;
+  margin-left: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* HERO SECTION ADD TO CART BUTTON (Video 2 Match) */
+.jitter-hero-morph-btn {
+  position: relative;
+  width: 100%;
+  padding: 1.15rem 1.8rem;
+  border-radius: var(--radius-full);
+  background: #ffd200 !important; /* Video 2 vibrant yellow */
+  color: #000000 !important;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  transition: background 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.25s ease;
+  box-shadow: 0 8px 30px rgba(255, 210, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.jitter-hero-morph-btn:hover {
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 14px 40px rgba(255, 210, 0, 0.55), 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+
+.jitter-hero-morph-btn.is-checkout-state {
+  background: #09090c !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.7);
+}
+
+.jitter-hero-track {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jitter-hero-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.35s ease;
+  width: 100%;
+}
+
+.jitter-hero-stage.stage-checkout {
+  position: absolute;
+  opacity: 0;
+  transform: translateY(24px) scale(0.92);
+  white-space: nowrap;
+}
+
+.jitter-hero-morph-btn.is-checkout-state .stage-add {
+  opacity: 0;
+  transform: translateY(-24px) scale(0.92);
+  pointer-events: none;
+}
+
+.jitter-hero-morph-btn.is-checkout-state .stage-checkout {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.jitter-hero-badge {
+  background: #000000;
+  color: #ffffff;
+  border-radius: 50%;
+  min-width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.76rem;
+  font-weight: 800;
+  margin-left: 2px;
+}
+
+/* JITTER SUBTOTAL BANNER IN DRAWER (Video 2 Match) */
+.jitter-subtotal-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  text-align: center;
+}
+
+.jitter-subtotal-header {
+  font-size: 1.05rem;
+  color: #ffffff;
+}
+
+.jitter-subtotal-header .subtotal-label {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.jitter-subtotal-header .subtotal-amount {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: #ffffff;
+  font-size: 1.2rem;
+  margin-left: 4px;
+}
+
+.subtotal-gift-note {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
 }
 
 /* ===================================================================
@@ -2401,6 +2888,74 @@ html, body {
     height: 16px;
   }
   .support-text {
+    font-size: 0.75rem;
+  }
+
+  /* Responsive Jitter Search & Cart Pill on Mobile */
+  .nav-actions {
+    gap: 0.45rem;
+  }
+  .jitter-search-pill {
+    width: 140px;
+    height: 38px;
+    padding: 0 0.65rem;
+    font-size: 0.78rem;
+  }
+  .jitter-search-pill.is-active,
+  .jitter-search-pill:focus-within {
+    width: min(calc(100vw - 28px), 280px);
+  }
+  .jitter-search-dropdown {
+    width: min(calc(100vw - 28px), 320px);
+    right: -40px;
+  }
+  .jitter-cart-pill {
+    height: 38px;
+    min-width: 105px;
+    padding: 0 0.75rem;
+    font-size: 0.8rem;
+  }
+  .jitter-counter-badge {
+    min-width: 19px;
+    height: 19px;
+    font-size: 0.7rem;
+  }
+  .auth-btn {
+    height: 38px;
+    padding: 0 0.65rem;
+  }
+  .auth-label {
+    display: none;
+  }
+}
+
+@media (max-width: 440px) {
+  .jitter-search-pill {
+    width: 38px;
+    padding: 0;
+    justify-content: center;
+  }
+  .jitter-typewriter-container,
+  .jitter-search-clear {
+    display: none;
+  }
+  .jitter-search-pill.is-active,
+  .jitter-search-pill:focus-within {
+    width: min(calc(100vw - 24px), 260px);
+    padding: 0 0.65rem;
+    justify-content: flex-start;
+  }
+  .jitter-search-pill.is-active .jitter-typewriter-container,
+  .jitter-search-pill:focus-within .jitter-typewriter-container {
+    display: flex;
+  }
+  .jitter-search-pill.is-active .jitter-search-clear,
+  .jitter-search-pill:focus-within .jitter-search-clear {
+    display: flex;
+  }
+  .jitter-cart-pill {
+    min-width: 88px;
+    padding: 0 0.55rem;
     font-size: 0.75rem;
   }
 }
