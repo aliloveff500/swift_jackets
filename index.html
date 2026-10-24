@@ -172,6 +172,52 @@
       </div>
     </header>
 
+    <!-- INSTANT PRE-RENDER BOOTSTRAPPER (Eliminates 0.5s flicker before first paint) -->
+    <script>
+      (function() {
+        try {
+          var raw = localStorage.getItem('swift_jackets_products') || localStorage.getItem('swift_jackets_products_backup');
+          if (!raw) {
+            try {
+              var xhr = new XMLHttpRequest();
+              xhr.open('GET', 'data/store_data.json', false);
+              xhr.send();
+              if (xhr.status === 200) {
+                var d = JSON.parse(xhr.responseText);
+                if (d && Array.isArray(d.products) && d.products.length > 0) {
+                  raw = JSON.stringify(d.products);
+                  localStorage.setItem('swift_jackets_products', raw);
+                  localStorage.setItem('swift_jackets_products_backup', raw);
+                  if (d.brand) {
+                    localStorage.setItem('swift_brand_settings', JSON.stringify(d.brand));
+                    localStorage.setItem('swift_brand_backup', JSON.stringify(d.brand));
+                  }
+                  if (d.updatedAt) {
+                    localStorage.setItem('swift_last_sync_time', d.updatedAt.toString());
+                  }
+                }
+              }
+            } catch(e) {}
+          }
+          if (raw) {
+            var prods = JSON.parse(raw);
+            if (Array.isArray(prods) && prods.length > 0) {
+              window.__SWIFT_BOOT_PRODUCTS = prods;
+              var p0 = prods[0];
+              var root = document.documentElement;
+              if (p0.hex) root.style.setProperty('--theme-color', p0.hex);
+              if (p0.gradient) root.style.setProperty('--theme-gradient', p0.gradient);
+              if (p0.themeGlow) root.style.setProperty('--theme-glow', p0.themeGlow);
+            }
+          }
+          var bRaw = localStorage.getItem('swift_brand_settings') || localStorage.getItem('swift_brand_backup');
+          if (bRaw) {
+            window.__SWIFT_BOOT_BRAND = JSON.parse(bRaw);
+          }
+        } catch(e) {}
+      })();
+    </script>
+
     <!-- HERO SECTION -->
     <main class="hero-section" id="hero">
 
@@ -181,19 +227,19 @@
         <div class="hero-top-meta">
           <div class="collection-pill">
             <span class="pulse-dot"></span>
-            <span id="collectionTag">WINTER 2026 EDITION</span>
+            <span id="collectionTag">SPECIAL EDITION</span>
           </div>
           <div class="carousel-counter">
             <span id="currentSlideNum">01</span>
             <span class="divider">/</span>
-            <span class="total" id="totalSlidesNum">04</span>
+            <span class="total" id="totalSlidesNum">03</span>
           </div>
         </div>
 
         <!-- CONDITION & STOCK ROW (Synced from Admin) -->
         <div class="hero-condition-stock-row">
           <span class="condition-badge" id="heroConditionBadge">Brand New</span>
-          <span class="stock-badge" id="heroStockBadge">18 Available</span>
+          <span class="stock-badge" id="heroStockBadge">15 Available â€¢ 0 Sold</span>
         </div>
 
         <!-- MAIN HEADLINE -->
@@ -207,7 +253,7 @@
 
         <!-- PRODUCT DESCRIPTION -->
         <p class="hero-description" id="productDesc">
-          Ultralight aerogel warmth. Sculpted modern silhouette.
+          6666
         </p>
 
         <!-- ACTION ROW: GET THE LOOK & QUICK SPECS -->
@@ -255,21 +301,6 @@
             class="hero-jacket-img" 
             id="mainJacketImg"
           >
-          <script>
-            (function() {
-              try {
-                var raw = localStorage.getItem('swift_jackets_products');
-                if (!raw) raw = localStorage.getItem('swift_jackets_products_backup');
-                if (raw) {
-                  var p = JSON.parse(raw);
-                  if (p && p[0] && p[0].image) {
-                    var el = document.getElementById('mainJacketImg');
-                    if (el) el.src = p[0].image;
-                  }
-                }
-              } catch(e) {}
-            })();
-          </script>
           <div class="jacket-realistic-shadow" id="jacketShadow"></div>
 
           <!-- 3D INTERACTIVE HINT BADGE -->
@@ -297,12 +328,12 @@
         <!-- PRICE CARD -->
         <div class="price-card">
           <div class="price-header">
-            <span class="color-indicator-name" id="jacketColorName">Solar Ember</span>
-            <span class="discount-badge" id="discountBadge">Save 25%</span>
+            <span class="color-indicator-name" id="jacketColorName">Custom Hue</span>
+            <span class="discount-badge" id="discountBadge">Save 90%</span>
           </div>
           <div class="price-values">
-            <span class="current-price" id="currentPrice">PKR 14,999</span>
-            <span class="original-price" id="originalPrice">PKR 19,999</span>
+            <span class="current-price" id="currentPrice">PKR 6,666</span>
+            <span class="original-price" id="originalPrice">PKR 66,666</span>
           </div>
         </div>
 
@@ -321,7 +352,7 @@
         <div class="selector-block color-selector">
           <div class="swatch-header-row">
             <label class="selector-label">Select Colorway:</label>
-            <span class="swatch-active-label" id="swatchActiveName">Solar Ember</span>
+            <span class="swatch-active-label" id="swatchActiveName">Custom Hue</span>
           </div>
           <div class="color-swatches" id="colorSwatches">
             <!-- Dynamically populated from active admin dataset -->
@@ -350,14 +381,73 @@
             >
           </div>
           <div class="preview-meta">
-            <span class="preview-title" id="previewColorTitle">Stealth Obsidian</span>
-            <span class="preview-price" id="previewPriceTitle">PKR 18,999</span>
+            <span class="preview-title" id="previewColorTitle">Custom Hue</span>
+            <span class="preview-price" id="previewPriceTitle">PKR 557</span>
             <span class="preview-prompt">Click to switch &rarr;</span>
           </div>
         </div>
       </section>
 
     </main>
+
+    <!-- SYNCHRONOUS HERO HYDRATOR (Applies cached products before first layout frame) -->
+    <script>
+      (function() {
+        try {
+          var prods = window.__SWIFT_BOOT_PRODUCTS;
+          if (prods && prods[0]) {
+            var p0 = prods[0];
+            var p1 = prods[1] || p0;
+            var formatPKR = function(v) { return 'PKR ' + (parseInt(v) || 0).toLocaleString('en-PK'); };
+
+            var mainImg = document.getElementById('mainJacketImg');
+            if (mainImg && p0.image) mainImg.src = p0.image;
+
+            var colorName = document.getElementById('jacketColorName');
+            if (colorName && p0.colorName) colorName.textContent = p0.colorName;
+
+            var curPrice = document.getElementById('currentPrice');
+            if (curPrice && p0.price) curPrice.textContent = formatPKR(p0.price);
+
+            var origPrice = document.getElementById('originalPrice');
+            if (origPrice && p0.originalPrice) origPrice.textContent = formatPKR(p0.originalPrice);
+
+            var disc = document.getElementById('discountBadge');
+            if (disc && p0.discount) disc.textContent = p0.discount;
+
+            var cond = document.getElementById('heroConditionBadge');
+            if (cond && p0.condition) cond.textContent = p0.condition;
+
+            var stock = document.getElementById('heroStockBadge');
+            if (stock) stock.textContent = (p0.stockAvailable || 15) + ' Available â€¢ ' + (p0.itemsSold || 0) + ' Sold';
+
+            var headMain = document.getElementById('heroHeadlineMain');
+            if (headMain && p0.headline) headMain.textContent = p0.headline;
+
+            var headSub = document.getElementById('heroHeadlineSub');
+            if (headSub && p0.headlineLight) headSub.textContent = p0.headlineLight;
+
+            var desc = document.getElementById('productDesc');
+            if (desc && p0.description) desc.textContent = p0.description;
+
+            var collTag = document.getElementById('collectionTag');
+            if (collTag && p0.tag) collTag.textContent = p0.tag;
+
+            var thumbImg = document.getElementById('previewThumbImg');
+            if (thumbImg && p1.image) thumbImg.src = p1.image;
+
+            var thumbTitle = document.getElementById('previewColorTitle');
+            if (thumbTitle && p1.colorName) thumbTitle.textContent = p1.colorName;
+
+            var thumbPrice = document.getElementById('previewPriceTitle');
+            if (thumbPrice && p1.price) thumbPrice.textContent = formatPKR(p1.price);
+
+            var totalSlides = document.getElementById('totalSlidesNum');
+            if (totalSlides) totalSlides.textContent = (prods.length < 10 ? '0' : '') + prods.length;
+          }
+        } catch(e) {}
+      })();
+    </script>
 
   </div>
 
