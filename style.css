@@ -1,5 +1,5 @@
 /* ===================================================================
-   SWIFT JACKETS — LUXURY MINIMALIST STYLESHEET
+   SWIFT JACKETS â€” LUXURY MINIMALIST STYLESHEET
    Dynamic Color Morphing, 3D Floating Showcase, Glassmorphic UI
 =================================================================== */
 
@@ -972,6 +972,16 @@ html, body {
   font-size: 0.75rem;
   color: var(--text-muted);
   font-weight: 600;
+}
+
+/* HARDWARE ACCELERATED TWO-WAY PRODUCT SWAP CLONES */
+.flying-swap-clone {
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none !important;
+  will-change: transform, left, top, width, height, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* ===================================================================
