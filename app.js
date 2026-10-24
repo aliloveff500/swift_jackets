@@ -1,5 +1,5 @@
 /* ===================================================================
-   SWIFT JACKETS — INTERACTIVE APPLICATION SCRIPT (ENHANCED)
+   SWIFT JACKETS â€” INTERACTIVE APPLICATION SCRIPT (ENHANCED)
    - Real-time Synchronization with Admin Portal
    - Dynamic Custom Color & 3D Background Theme Generation
    - Product Condition & Stock Meters
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const toast = document.createElement('div');
     toast.className = 'swift-toast-item';
-    const icon = type === 'success' ? '✓' : (type === 'danger' ? '⚠️' : 'ℹ️');
+    const icon = type === 'success' ? 'âœ“' : (type === 'danger' ? 'âš ï¸' : 'â„¹ï¸');
     toast.innerHTML = `<span>${icon}</span> <span>${text}</span>`;
     container.appendChild(toast);
     setTimeout(() => {
@@ -217,11 +217,57 @@ document.addEventListener('DOMContentLoaded', () => {
     return `PKR ${num.toLocaleString('en-PK')}`;
   }
 
-  // Load products from LocalStorage with dual redundancy backup
+  // Load products from LocalStorage with dual redundancy backup, boot cache, and initial seed
   function getLiveProducts() {
     let stored = localStorage.getItem('swift_jackets_products');
     if (!stored) {
       stored = localStorage.getItem('swift_jackets_products_backup');
+    }
+    // Check pre-boot products from index.html inline script
+    if (!stored && window.__SWIFT_BOOT_PRODUCTS && Array.isArray(window.__SWIFT_BOOT_PRODUCTS) && window.__SWIFT_BOOT_PRODUCTS.length > 0) {
+      try {
+        stored = JSON.stringify(window.__SWIFT_BOOT_PRODUCTS);
+        localStorage.setItem('swift_jackets_products', stored);
+        localStorage.setItem('swift_jackets_products_backup', stored);
+      } catch(e) {}
+    }
+    // Check embedded initial store data element in index.html (eliminates 0.5s network delay on new devices)
+    if (!stored) {
+      const seedEl = document.getElementById('swiftInitialStoreData');
+      if (seedEl && seedEl.textContent) {
+        try {
+          const seed = JSON.parse(seedEl.textContent);
+          if (seed && Array.isArray(seed.products) && seed.products.length > 0) {
+            stored = JSON.stringify(seed.products);
+            localStorage.setItem('swift_jackets_products', stored);
+            localStorage.setItem('swift_jackets_products_backup', stored);
+            if (seed.brand) {
+              localStorage.setItem('swift_brand_settings', JSON.stringify(seed.brand));
+              localStorage.setItem('swift_brand_backup', JSON.stringify(seed.brand));
+            }
+          }
+        } catch(e) {}
+      }
+    }
+    // Synchronous fetch of data/store_data.json if needed
+    if (!stored) {
+      try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'data/store_data.json', false);
+        xhr.send();
+        if (xhr.status === 200) {
+          const d = JSON.parse(xhr.responseText);
+          if (d && Array.isArray(d.products) && d.products.length > 0) {
+            stored = JSON.stringify(d.products);
+            localStorage.setItem('swift_jackets_products', stored);
+            localStorage.setItem('swift_jackets_products_backup', stored);
+            if (d.brand) {
+              localStorage.setItem('swift_brand_settings', JSON.stringify(d.brand));
+              localStorage.setItem('swift_brand_backup', JSON.stringify(d.brand));
+            }
+          }
+        }
+      } catch(e) {}
     }
     if (!stored) {
       try {
@@ -427,11 +473,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (swatchActiveName) swatchActiveName.textContent = prod.colorName;
-
-    // Immediately update main hero jacket image to match current product
-    if (mainJacketImg && prod && prod.image) {
-      mainJacketImg.src = prod.image;
-    }
   }
 
   // 5. INITIALIZE VISIBLE COLORWAY SWATCHES
@@ -488,163 +529,197 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 7. SWITCH PRODUCT LOGIC
-  function switchProduct(newIndex, direction = 1, fromSwatch = false) {
-    if (isAnimating || products.length === 0) return;
+  // 7. CINEMATIC TWO-WAY PRODUCT SWAP ANIMATION
+  // The jacket in hero stage smoothly flies down to bottom-right preview, 
+  // and the bottom-right preview jacket simultaneously flies up into the hero stage!
+  function performTwoWayJacketSwap(targetIndex, direction = 1) {
+    if (isAnimating || products.length <= 1) return;
+
+    const newIndex = ((targetIndex % products.length) + products.length) % products.length;
+    if (newIndex === currentIndex) return;
+
+    if (!mainJacketImg || !previewThumbImg || !nextPreviewCard) {
+      currentIndex = newIndex;
+      updateEditorialContent(products[currentIndex]);
+      applyProductTheme(products[currentIndex]);
+      updateSizeAvailability(products[currentIndex]);
+      return;
+    }
+
     isAnimating = true;
 
-    currentIndex = newIndex % products.length;
-    const nextProd = products[currentIndex];
+    const oldIndex = currentIndex;
+    const currentProd = products[oldIndex];
+    const nextProd = products[newIndex];
+    const upcomingIndex = (newIndex + 1) % products.length;
+    const upcomingProd = products[upcomingIndex];
 
-    // Apply color theme dynamically
-    applyProductTheme(nextProd);
-
-    // Update size toggles
-    updateSizeAvailability(nextProd);
-
-    if (!fromSwatch && nextPreviewCard) {
-      animateFromBottomRightToHero(nextProd);
-    } else {
-      animateDirectionalSlide(nextProd, direction);
-    }
-  }
-
-  // ANIMATION: BOTTOM-RIGHT THUMBNAIL INTO HERO
-  function animateFromBottomRightToHero(nextProd) {
-    const thumbRect = previewThumbImg.getBoundingClientRect();
+    // Read bounding boxes of the Hero Stage and the Bottom-Right Thumbnail
     const heroRect = mainJacketImg.getBoundingClientRect();
+    const thumbRect = previewThumbImg.getBoundingClientRect();
 
+    if (heroRect.width === 0 || thumbRect.width === 0) {
+      currentIndex = newIndex;
+      updateEditorialContent(nextProd);
+      applyProductTheme(nextProd);
+      updateSizeAvailability(nextProd);
+      isAnimating = false;
+      return;
+    }
+
+    // 1. Create Clone A: Hero Jacket flying DOWN to the bottom-right preview card
+    const flyingHero = document.createElement('img');
+    flyingHero.src = currentProd.image;
+    flyingHero.alt = currentProd.name || 'Swift Jacket';
+    flyingHero.className = 'flying-swap-clone flying-hero-to-thumb';
+    flyingHero.style.cssText = `
+      position: fixed;
+      left: ${heroRect.left}px;
+      top: ${heroRect.top}px;
+      width: ${heroRect.width}px;
+      height: ${heroRect.height}px;
+      object-fit: contain;
+      z-index: 94;
+      pointer-events: none;
+      filter: drop-shadow(0 15px 35px rgba(0,0,0,0.45));
+    `;
+    document.body.appendChild(flyingHero);
+
+    // 2. Create Clone B: Thumbnail Jacket flying UP to the central Hero Stage
     const flyingThumb = document.createElement('img');
     flyingThumb.src = nextProd.image;
-    flyingThumb.style.position = 'fixed';
-    flyingThumb.style.left = `${thumbRect.left}px`;
-    flyingThumb.style.top = `${thumbRect.top}px`;
-    flyingThumb.style.width = `${thumbRect.width}px`;
-    flyingThumb.style.height = `${thumbRect.height}px`;
-    flyingThumb.style.objectFit = 'contain';
-    flyingThumb.style.zIndex = '90';
-    flyingThumb.style.pointerEvents = 'none';
-    flyingThumb.style.filter = 'drop-shadow(0 15px 30px rgba(0,0,0,0.5))';
+    flyingThumb.alt = nextProd.name || 'Swift Jacket';
+    flyingThumb.className = 'flying-swap-clone flying-thumb-to-hero';
+    flyingThumb.style.cssText = `
+      position: fixed;
+      left: ${thumbRect.left}px;
+      top: ${thumbRect.top}px;
+      width: ${thumbRect.width}px;
+      height: ${thumbRect.height}px;
+      object-fit: contain;
+      z-index: 98;
+      pointer-events: none;
+      filter: drop-shadow(0 22px 50px rgba(0,0,0,0.65));
+    `;
     document.body.appendChild(flyingThumb);
 
+    // 3. Immediately hide the static images so NO flash or premature switch can ever happen
+    gsap.set(mainJacketImg, { opacity: 0 });
+    gsap.set(previewThumbImg, { opacity: 0 });
+
+    const flightDuration = 0.65;
     const tl = gsap.timeline({
       onComplete: () => {
+        currentIndex = newIndex;
+
+        // Set final static sources
+        mainJacketImg.src = nextProd.image;
+        previewThumbImg.src = upcomingProd.image;
+        if (previewColorTitle) previewColorTitle.textContent = upcomingProd.colorName;
+        if (previewPriceTitle) previewPriceTitle.textContent = formatPKR(upcomingProd.price);
+
+        // Restore static images with zero transforms
+        gsap.set(mainJacketImg, {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          scale: 1,
+          rotationX: 0,
+          rotationY: 0,
+          rotationZ: 0
+        });
+        gsap.set(previewThumbImg, {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          scale: 1,
+          rotation: 0
+        });
+
+        // Clean up floating clones
+        flyingHero.remove();
         flyingThumb.remove();
+
         isAnimating = false;
       }
     });
 
-    tl.to(mainJacketImg, {
-      scale: 0.8,
-      y: -30,
-      opacity: 0,
-      duration: 0.35,
-      ease: 'power2.in'
+    // A: Hero flies down to Thumbnail Card (Smooth Shrink & Glide)
+    tl.to(flyingHero, {
+      left: thumbRect.left,
+      top: thumbRect.top,
+      width: thumbRect.width,
+      height: thumbRect.height,
+      rotation: direction * -8,
+      opacity: 0.85,
+      duration: flightDuration,
+      ease: 'power3.inOut'
     }, 0);
 
-    tl.to([productDesc, heroTagline, currentPrice], {
-      opacity: 0.3,
-      y: -6,
-      duration: 0.2
-    }, 0);
-
+    // B: Thumbnail flies up to Hero Stage (Smooth Scale & Arc)
     tl.to(flyingThumb, {
       left: heroRect.left,
       top: heroRect.top,
       width: heroRect.width,
       height: heroRect.height,
-      rotation: 0,
-      duration: 0.55,
-      ease: 'power3.out',
-      onComplete: () => {
-        mainJacketImg.src = nextProd.image;
-        gsap.set(mainJacketImg, { scale: 1, y: 0, opacity: 1, rotationX: 0, rotationY: 0 });
-      }
-    }, 0.1);
+      rotation: direction * 4,
+      duration: flightDuration,
+      ease: 'power3.out'
+    }, 0);
 
+    // Subtle fade and float of text details
+    const textGroup = [productDesc, heroTagline, currentPrice, originalPrice, jacketColorName, discountBadge];
+    tl.to(textGroup, {
+      opacity: 0.15,
+      y: -6,
+      duration: 0.2,
+      ease: 'power1.in'
+    }, 0);
+
+    // At halfway point (0.25s), update text and theme in background while clones cross
     tl.add(() => {
-      updateEditorialContent(nextProd);
+      updateEditorialTextOnly(nextProd, newIndex);
+      applyProductTheme(nextProd);
+      updateSizeAvailability(nextProd);
     }, 0.25);
 
-    tl.to([productDesc, heroTagline, currentPrice], {
+    // Fade text back in
+    tl.to(textGroup, {
       opacity: 1,
       y: 0,
       duration: 0.35,
       ease: 'power2.out'
-    }, 0.35);
+    }, 0.3);
 
+    // Ambient pedestal shadow pulse
     tl.fromTo(jacketShadow, 
-      { scale: 0.6, opacity: 0.3 }, 
-      { scale: 1, opacity: 0.8, duration: 0.5, ease: 'power2.out' }, 
-      0.3
+      { scale: 0.5, opacity: 0.25 }, 
+      { scale: 1, opacity: 0.85, duration: 0.55, ease: 'power2.out' }, 
+      0.2
     );
   }
 
-  // ANIMATION: DIRECTIONAL SLIDE
-  function animateDirectionalSlide(nextProd, direction) {
-    const exitX = direction === 1 ? -180 : 180;
-    const enterX = direction === 1 ? 180 : -180;
-    const exitRot = direction === 1 ? -12 : 12;
-    const enterRot = direction === 1 ? 12 : -12;
-
-    const tl = gsap.timeline({
-      onComplete: () => {
-        isAnimating = false;
-      }
-    });
-
-    tl.to(mainJacketImg, {
-      x: exitX,
-      y: -15,
-      rotationY: exitRot,
-      scale: 0.88,
-      opacity: 0,
-      duration: 0.35,
-      ease: 'power2.in',
-      onComplete: () => {
-        mainJacketImg.src = nextProd.image;
-        gsap.set(mainJacketImg, {
-          x: enterX,
-          y: 15,
-          rotationY: enterRot,
-          scale: 0.88,
-          opacity: 0
-        });
-      }
-    });
-
-    tl.to([productDesc, heroTagline, currentPrice], { opacity: 0.3, y: -6, duration: 0.2 }, 0);
-
-    tl.add(() => {
-      updateEditorialContent(nextProd);
-    }, 0.25);
-
-    tl.to(mainJacketImg, {
-      x: 0,
-      y: 0,
-      rotationY: 0,
-      scale: 1,
-      opacity: 1,
-      duration: 0.55,
-      ease: 'power3.out'
-    });
-
-    tl.to([productDesc, heroTagline, currentPrice], { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }, '-=0.4');
+  // Backward compatible wrapper
+  function switchProduct(newIndex, direction = 1) {
+    performTwoWayJacketSwap(newIndex, direction);
   }
 
-  // HELPER: UPDATE EDITORIAL CONTENT
-  function updateEditorialContent(prod) {
-    currentSlideNum.textContent = `0${currentIndex + 1}`;
-    collectionTag.textContent = prod.tag || 'WINTER 2026 EDITION';
+  // HELPER: UPDATE EDITORIAL TEXT ONLY (Leaves static images untouched during flight)
+  function updateEditorialTextOnly(prod, idx) {
+    if (!prod) return;
+    if (currentSlideNum) currentSlideNum.textContent = `0${idx + 1}`;
+    if (collectionTag) collectionTag.textContent = prod.tag || 'WINTER 2026 EDITION';
     if (heroHeadlineMain) heroHeadlineMain.textContent = prod.headline || 'Stand out';
     if (heroHeadlineSub) heroHeadlineSub.textContent = prod.headlineLight || 'Without trying';
-    productDesc.textContent = prod.description;
-    techTagText.textContent = prod.tech || 'Aerogel 850+ Fill';
-    heroTagline.innerHTML = `<span class="quote-line"></span><p>${prod.tagline || 'Confidence, wrapped in warmth'}</p><span class="quote-line"></span>`;
-    jacketColorName.textContent = prod.colorName;
-    discountBadge.textContent = prod.discount || 'Save 25%';
-    currentPrice.textContent = formatPKR(prod.price);
-    originalPrice.textContent = formatPKR(prod.originalPrice);
+    if (productDesc) productDesc.textContent = prod.description || '';
+    if (techTagText) techTagText.textContent = prod.tech || 'Aerogel 850+ Fill';
+    if (heroTagline) {
+      heroTagline.innerHTML = `<span class="quote-line"></span><p>${prod.tagline || 'Confidence, wrapped in warmth'}</p><span class="quote-line"></span>`;
+    }
+    if (jacketColorName) jacketColorName.textContent = prod.colorName;
+    if (discountBadge) discountBadge.textContent = prod.discount || 'Save 25%';
+    if (currentPrice) currentPrice.textContent = formatPKR(prod.price);
+    if (originalPrice) originalPrice.textContent = formatPKR(prod.originalPrice);
 
     // Update Condition & Stock
     if (heroConditionBadge) {
@@ -655,42 +730,51 @@ document.addEventListener('DOMContentLoaded', () => {
     if (heroStockBadge) {
       const avail = prod.stockAvailable || 15;
       const sold = prod.itemsSold || 0;
-      heroStockBadge.textContent = `${avail} Available • ${sold} Sold`;
+      heroStockBadge.textContent = `${avail} Available â€¢ ${sold} Sold`;
     }
 
     // Update active swatch
-    const dots = colorSwatchesContainer.querySelectorAll('.color-dot-btn');
-    dots.forEach((d, i) => d.classList.toggle('active', i === currentIndex));
+    if (colorSwatchesContainer) {
+      const dots = colorSwatchesContainer.querySelectorAll('.color-dot-btn');
+      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    }
+  }
 
-    // Update bottom-right mini preview card
+  // HELPER: FULL EDITORIAL & IMAGE UPDATE (Used on boot, reload, and sync)
+  function updateEditorialContent(prod) {
+    if (!prod) return;
+    updateEditorialTextOnly(prod, currentIndex);
+
     const upcomingIndex = (currentIndex + 1) % products.length;
     const upcomingProd = products[upcomingIndex];
-    previewThumbImg.src = upcomingProd.image;
-    previewColorTitle.textContent = upcomingProd.colorName;
-    if (previewPriceTitle) {
+    if (previewThumbImg && upcomingProd) {
+      previewThumbImg.src = upcomingProd.image;
+    }
+    if (previewColorTitle && upcomingProd) {
+      previewColorTitle.textContent = upcomingProd.colorName;
+    }
+    if (previewPriceTitle && upcomingProd) {
       previewPriceTitle.textContent = formatPKR(upcomingProd.price);
     }
-
-    // Immediately update main hero jacket image to match current product
     if (mainJacketImg && prod && prod.image) {
       mainJacketImg.src = prod.image;
     }
   }
 
-  // 8. NAVIGATION ARROWS
+  // 8. NAVIGATION ARROWS & SWITCH TRIGGERS (Two-Way Animated)
   nextBtn.addEventListener('click', () => {
     const nextIdx = (currentIndex + 1) % products.length;
-    switchProduct(nextIdx, 1, false);
+    performTwoWayJacketSwap(nextIdx, 1);
   });
 
   prevBtn.addEventListener('click', () => {
     const prevIdx = (currentIndex - 1 + products.length) % products.length;
-    switchProduct(prevIdx, -1, false);
+    performTwoWayJacketSwap(prevIdx, -1);
   });
 
   nextPreviewCard.addEventListener('click', () => {
     const nextIdx = (currentIndex + 1) % products.length;
-    switchProduct(nextIdx, 1, false);
+    performTwoWayJacketSwap(nextIdx, 1);
   });
 
   // 9. 3D DRAG-TO-ROTATE
@@ -1098,7 +1182,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update button to success state
     if (placeOrderBtn) {
-      placeOrderBtn.innerHTML = `<span>✓ Order Placed Successfully</span><i data-lucide="check-circle" class="icon-sm"></i>`;
+      placeOrderBtn.innerHTML = `<span>âœ“ Order Placed Successfully</span><i data-lucide="check-circle" class="icon-sm"></i>`;
       placeOrderBtn.style.background = '#10b981';
       placeOrderBtn.style.boxShadow = '0 0 25px rgba(16, 185, 129, 0.5)';
       placeOrderBtn.disabled = true;
@@ -1488,6 +1572,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Only update if cloud has genuine newer changes, or if local is completely empty
         if (cloudTime > localTime || (!hasUserChanges && !hasStoredProducts)) {
+          const currentHeroId = products && products[0] ? products[0].id : null;
+          const cloudHeroId = cloudData.products[0] ? cloudData.products[0].id : null;
+          const isIdentical = currentHeroId === cloudHeroId && products.length === cloudData.products.length;
+
           localStorage.setItem('swift_jackets_products', JSON.stringify(cloudData.products));
           localStorage.setItem('swift_jackets_products_backup', JSON.stringify(cloudData.products));
           localStorage.setItem('swift_last_sync_time', cloudTime.toString());
@@ -1495,7 +1583,17 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('swift_brand_settings', JSON.stringify(cloudData.brand));
             localStorage.setItem('swift_brand_backup', JSON.stringify(cloudData.brand));
           }
-          reloadStoreFromStorage();
+
+          if (!isIdentical) {
+            gsap.to(['.hero-left', '#jacketStage', '.hero-right'], {
+              opacity: 0.15,
+              duration: 0.18,
+              yoyo: true,
+              repeat: 1,
+              ease: 'power1.inOut',
+              onRepeat: () => reloadStoreFromStorage()
+            });
+          }
         }
       }
     } catch (err) {
@@ -1528,6 +1626,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const localTime = parseInt(localStorage.getItem('swift_last_sync_time') || '0');
                 const cloudTime = parseInt(parsed.updatedAt || '0');
                 if (cloudTime > localTime) {
+                  const currentHeroId = products && products[0] ? products[0].id : null;
+                  const cloudHeroId = parsed.products[0] ? parsed.products[0].id : null;
+                  const isIdentical = currentHeroId === cloudHeroId && products.length === parsed.products.length;
+
                   localStorage.setItem('swift_jackets_products', JSON.stringify(parsed.products));
                   localStorage.setItem('swift_jackets_products_backup', JSON.stringify(parsed.products));
                   localStorage.setItem('swift_last_sync_time', cloudTime.toString());
@@ -1535,7 +1637,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.setItem('swift_brand_settings', JSON.stringify(parsed.brand));
                     localStorage.setItem('swift_brand_backup', JSON.stringify(parsed.brand));
                   }
-                  reloadStoreFromStorage();
+
+                  if (!isIdentical) {
+                    gsap.to(['.hero-left', '#jacketStage', '.hero-right'], {
+                      opacity: 0.15,
+                      duration: 0.18,
+                      yoyo: true,
+                      repeat: 1,
+                      ease: 'power1.inOut',
+                      onRepeat: () => reloadStoreFromStorage()
+                    });
+                  }
                 }
               }
             }
