@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SWIFT JACKETS â€” Official Store | Luxury Outerwear &amp; Winter Puffer Jackets</title>
+  <title>SWIFT JACKETS — Official Store | Luxury Outerwear &amp; Winter Puffer Jackets</title>
   
   <!-- SEARCH ENGINE OPTIMIZATION & GOOGLE VERIFICATION -->
   <meta name="description" content="Official SWIFT JACKETS online store. Luxury alpine performance puffer jackets &amp; winter outerwear in Pakistan. Crafted with aerogel insulation, stormproof micro-ripstop, and sculpted modern silhouette. Free nationwide delivery.">
   <meta name="keywords" content="swift jackets, swift jackets official, swift jackets pakistan, luxury jackets, puffer jacket, alpine outerwear, winter jackets, aerogel jacket, designer outerwear">
-  <meta name="author" content="SWIFT JACKETS â€” ALIZOX">
+  <meta name="author" content="SWIFT JACKETS — ALIZOX">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
   <meta name="theme-color" content="#ff6a2b">
   <meta name="google-site-verification" content="L1IuTlo1nWGZYey19aeD-C6xTceoy9SsFmclKkPJE4E" />
@@ -22,7 +22,7 @@
   <!-- OPEN GRAPH / FACEBOOK / WHATSAPP -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://swiftjackets.vercel.app/">
-  <meta property="og:title" content="SWIFT JACKETS â€” Official Store | Luxury Outerwear">
+  <meta property="og:title" content="SWIFT JACKETS — Official Store | Luxury Outerwear">
   <meta property="og:description" content="Official SWIFT JACKETS online store. Luxury alpine performance puffer jackets &amp; modern winter streetwear in Pakistan. Free nationwide shipping.">
   <meta property="og:image" content="https://swiftjackets.vercel.app/assets/images/jacket_orange.png">
   <meta property="og:image:width" content="1200">
@@ -31,7 +31,7 @@
 
   <!-- TWITTER CARDS -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="SWIFT JACKETS â€” Official Store">
+  <meta name="twitter:title" content="SWIFT JACKETS — Official Store">
   <meta name="twitter:description" content="Confidence, wrapped in warmth. Discover the Winter 2026 Capsule Collection.">
   <meta name="twitter:image" content="https://swiftjackets.vercel.app/assets/images/jacket_orange.png">
 
@@ -83,7 +83,7 @@
       {
         "@type": "Product",
         "@id": "https://swiftjackets.vercel.app/#swift-orange",
-        "name": "Swift ThermoPuff Apex â€” Swift Jackets",
+        "name": "Swift ThermoPuff Apex — Swift Jackets",
         "description": "Ultralight aerogel warmth. Sculpted modern silhouette. Winter 2026 Edition by Swift Jackets.",
         "image": "https://swiftjackets.vercel.app/assets/images/jacket_orange.png",
         "brand": {
@@ -156,17 +156,48 @@
 
       <!-- RIGHT NAV ACTIONS -->
       <div class="nav-actions">
+        <!-- JITTER ANIMATED TYPEWRITER SEARCH BAR (Exact Video 1 Match) -->
+        <div class="jitter-search-wrap" id="swiftSearchWrap">
+          <div class="jitter-search-pill" id="searchInputPill">
+            <i data-lucide="search" class="jitter-search-icon"></i>
+            <div class="jitter-typewriter-container">
+              <input type="text" id="storeSearchInput" class="jitter-search-input" autocomplete="off" spellcheck="false" aria-label="Search jackets">
+              <span class="jitter-typewriter-text" id="typewriterText"></span>
+              <span class="jitter-typewriter-cursor" id="typewriterCursor">|</span>
+            </div>
+            <button type="button" class="jitter-search-clear" id="searchClearBtn" aria-label="Clear search" style="display: none;">
+              <i data-lucide="x" class="icon-xs"></i>
+            </button>
+          </div>
+
+          <!-- FLOATING SEARCH RESULTS DROPDOWN -->
+          <div class="jitter-search-dropdown" id="searchDropdownMenu">
+            <div class="jitter-dropdown-header">
+              <span class="dropdown-title">Outerwear Collection</span>
+              <span class="dropdown-count" id="searchResultsCount">0 found</span>
+            </div>
+            <div class="jitter-results-list" id="searchResultsList"></div>
+          </div>
+        </div>
+
         <!-- USER / SIGN IN BUTTON -->
         <button class="nav-btn auth-btn" id="openAuthModal" title="Account">
           <i data-lucide="user" class="icon-sm"></i>
           <span class="auth-label" id="authButtonText">Sign In</span>
         </button>
 
-        <!-- CART ICON BUTTON -->
-        <button class="nav-btn cart-btn" id="openCartDrawer" aria-label="Cart" title="View Cart">
-          <div class="cart-icon-wrap">
-            <i data-lucide="shopping-bag" class="icon-sm"></i>
-            <span class="cart-badge" id="cartBadge">0</span>
+        <!-- JITTER MORPHING CART PILL (Exact Video 2 Match) -->
+        <button class="jitter-cart-pill" id="openCartDrawer" aria-label="Cart" title="View Cart">
+          <div class="jitter-pill-inner" id="navCartPillInner">
+            <div class="jitter-stage-view" id="navCartStageView">
+              <i data-lucide="shopping-bag" class="jitter-cart-icon icon-sm"></i>
+              <span class="jitter-cart-label">View cart</span>
+              <span class="jitter-counter-badge" id="cartBadge">0</span>
+            </div>
+            <div class="jitter-stage-checkout" id="navCartStageCheckout">
+              <span class="jitter-checkout-label">Go to checkout</span>
+              <i data-lucide="arrow-right" class="icon-sm"></i>
+            </div>
           </div>
         </button>
       </div>
@@ -239,7 +270,7 @@
         <!-- CONDITION & STOCK ROW (Synced from Admin) -->
         <div class="hero-condition-stock-row">
           <span class="condition-badge" id="heroConditionBadge">Brand New</span>
-          <span class="stock-badge" id="heroStockBadge">15 Available â€¢ 0 Sold</span>
+          <span class="stock-badge" id="heroStockBadge">15 Available • 0 Sold</span>
         </div>
 
         <!-- MAIN HEADLINE -->
@@ -359,12 +390,19 @@
           </div>
         </div>
 
-        <!-- ADD TO CART BUTTON WITH FLYING ANIMATION -->
+        <!-- ADD TO CART BUTTON WITH FLYING ANIMATION & JITTER MORPH (Exact Video 2 Match) -->
         <div class="cart-action-wrap">
-          <button class="add-to-cart-btn" id="addToCartBtn">
-            <div class="btn-content">
-              <i data-lucide="shopping-bag" class="icon-sm"></i>
-              <span class="btn-text">Add to cart</span>
+          <button class="add-to-cart-btn jitter-hero-morph-btn" id="addToCartBtn" title="Add to cart & Checkout">
+            <div class="jitter-hero-track" id="heroBtnTrack">
+              <div class="jitter-hero-stage stage-add" id="heroStageAdd">
+                <i data-lucide="shopping-bag" class="icon-sm jitter-cart-icon"></i>
+                <span class="btn-text jitter-cart-text">Add to cart</span>
+                <span class="jitter-hero-badge" id="heroBtnBadge">1</span>
+              </div>
+              <div class="jitter-hero-stage stage-checkout" id="heroStageCheckout">
+                <span class="btn-text">Go to checkout</span>
+                <i data-lucide="arrow-right" class="icon-sm"></i>
+              </div>
             </div>
           </button>
         </div>
@@ -419,7 +457,7 @@
             if (cond && p0.condition) cond.textContent = p0.condition;
 
             var stock = document.getElementById('heroStockBadge');
-            if (stock) stock.textContent = (p0.stockAvailable || 15) + ' Available â€¢ ' + (p0.itemsSold || 0) + ' Sold';
+            if (stock) stock.textContent = (p0.stockAvailable || 15) + ' Available • ' + (p0.itemsSold || 0) + ' Sold';
 
             var headMain = document.getElementById('heroHeadlineMain');
             if (headMain && p0.headline) headMain.textContent = p0.headline;
@@ -547,6 +585,18 @@
           <h3 class="empty-title">Your Bag is Empty</h3>
           <p class="empty-desc">You removed the jacket from your shopping bag.</p>
           <button class="cta-primary" id="emptyExploreBtn">Explore Collection</button>
+        </div>
+
+        <!-- JITTER SUBTOTAL BANNER (Exact Video 2 Match) -->
+        <div class="jitter-subtotal-card" id="drawerSubtotalCard">
+          <div class="jitter-subtotal-header">
+            <span class="subtotal-label">Subtotal (<span id="drawerQtyText">1 item</span>):</span>
+            <span class="subtotal-amount" id="drawerSubtotalPrice">PKR 6,666</span>
+          </div>
+          <p class="subtotal-gift-note">
+            <i data-lucide="gift" class="icon-xs"></i>
+            <span>This order contains complimentary express insured delivery</span>
+          </p>
         </div>
 
         <!-- CHECKOUT INFORMATION FORM -->
