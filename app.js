@@ -1,5 +1,5 @@
 /* ===================================================================
-   SWIFT JACKETS â€” INTERACTIVE APPLICATION SCRIPT (ENHANCED)
+   SWIFT JACKETS — INTERACTIVE APPLICATION SCRIPT (ENHANCED)
    - Real-time Synchronization with Admin Portal
    - Dynamic Custom Color & 3D Background Theme Generation
    - Product Condition & Stock Meters
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const toast = document.createElement('div');
     toast.className = 'swift-toast-item';
-    const icon = type === 'success' ? 'âœ“' : (type === 'danger' ? 'âš ï¸' : 'â„¹ï¸');
+    const icon = type === 'success' ? '✓' : (type === 'danger' ? '⚠️' : 'ℹ️');
     toast.innerHTML = `<span>${icon}</span> <span>${text}</span>`;
     container.appendChild(toast);
     setTimeout(() => {
@@ -730,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (heroStockBadge) {
       const avail = prod.stockAvailable || 15;
       const sold = prod.itemsSold || 0;
-      heroStockBadge.textContent = `${avail} Available â€¢ ${sold} Sold`;
+      heroStockBadge.textContent = `${avail} Available • ${sold} Sold`;
     }
 
     // Update active swatch
@@ -859,8 +859,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 11. FLYING ADD TO CART ANIMATION
+  // =================================================================
+  // JITTER MORPHING CART BUTTON ENGINE (Exact Video 2 Match)
+  // Yellow View-Cart <---> Obsidian Black Checkout Morph
+  // =================================================================
+  let checkoutMorphTimer = null;
+
+  function triggerCheckoutMorph() {
+    const navCartPill = document.getElementById('openCartDrawer');
+    const heroCartBtn = document.getElementById('addToCartBtn');
+    const heroBtnBadge = document.getElementById('heroBtnBadge');
+    const navCartBadge = document.getElementById('cartBadge');
+
+    if (heroBtnBadge) heroBtnBadge.textContent = cartQuantity || 1;
+    if (navCartBadge) navCartBadge.textContent = cartQuantity || 1;
+
+    if (navCartPill) navCartPill.classList.add('is-checkout-state');
+    if (heroCartBtn) heroCartBtn.classList.add('is-checkout-state');
+
+    if (checkoutMorphTimer) clearTimeout(checkoutMorphTimer);
+    checkoutMorphTimer = setTimeout(() => {
+      revertCheckoutMorph();
+    }, 6500);
+  }
+
+  function revertCheckoutMorph() {
+    const navCartPill = document.getElementById('openCartDrawer');
+    const heroCartBtn = document.getElementById('addToCartBtn');
+    if (navCartPill) navCartPill.classList.remove('is-checkout-state');
+    if (heroCartBtn) heroCartBtn.classList.remove('is-checkout-state');
+  }
+
+  // 11. FLYING ADD TO CART ANIMATION & JITTER MORPH (Video 2)
   addToCartBtn.addEventListener('click', () => {
+    // If the button has morphed into "Go to checkout", jump straight into checkout drawer!
+    if (addToCartBtn.classList.contains('is-checkout-state')) {
+      cartOverlay.classList.add('active');
+      prefillCustomerDetails();
+      const checkoutFormEl = document.getElementById('checkoutForm');
+      if (checkoutFormEl) {
+        setTimeout(() => {
+          checkoutFormEl.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+      }
+      return;
+    }
+
     const currentProd = products[currentIndex] || products[0];
     
     cartItemImage.src = currentProd.image;
@@ -883,7 +927,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cartHeaderSubtitle').textContent = 'Complete checkout below';
 
     animateFlyToCart(() => {
-      cartOverlay.classList.add('active');
+      triggerCheckoutMorph();
     });
   });
 
@@ -909,7 +953,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tl = gsap.timeline({
       onComplete: () => {
         ghost.remove();
-        cartBadge.textContent = '1';
+        cartBadge.textContent = String(cartQuantity || 1);
         gsap.fromTo(cartBadge, 
           { scale: 1.8, rotate: -15 }, 
           { scale: 1, rotate: 0, duration: 0.45, ease: 'back.out(2.5)' }
@@ -935,12 +979,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 12. CART QUANTITY & CALCULATIONS
+  // 12. CART QUANTITY & CALCULATIONS (Synchronized with Video 2 Subtotal Card)
   function updateCartCalculations() {
-    const p = products[currentIndex];
+    const p = products[currentIndex] || products[0];
     const total = p.price * cartQuantity;
     if (summaryTotal) summaryTotal.textContent = formatPKR(total);
     if (cartItemPrice) cartItemPrice.textContent = formatPKR(p.price);
+
+    // Sync Jitter Subtotal Banner in Drawer (Video 2)
+    const drawerQtyText = document.getElementById('drawerQtyText');
+    const drawerSubtotalPrice = document.getElementById('drawerSubtotalPrice');
+    const heroBtnBadge = document.getElementById('heroBtnBadge');
+    if (drawerQtyText) drawerQtyText.textContent = `${cartQuantity} ${cartQuantity === 1 ? 'item' : 'items'}`;
+    if (drawerSubtotalPrice) drawerSubtotalPrice.textContent = formatPKR(total);
+    if (cartBadge) cartBadge.textContent = String(cartQuantity);
+    if (heroBtnBadge) heroBtnBadge.textContent = String(cartQuantity);
   }
 
   qtyPlus.addEventListener('click', () => {
@@ -972,7 +1025,10 @@ document.addEventListener('DOMContentLoaded', () => {
           checkoutForm.style.display = 'none';
           cartEmptyState.style.display = 'flex';
           cartBadge.textContent = '0';
+          const heroBtnBadge = document.getElementById('heroBtnBadge');
+          if (heroBtnBadge) heroBtnBadge.textContent = '0';
           cartQuantity = 0;
+          revertCheckoutMorph();
           document.getElementById('cartHeaderSubtitle').textContent = 'Your bag is empty';
           if (window.lucide) lucide.createIcons();
         }
@@ -989,6 +1045,7 @@ document.addEventListener('DOMContentLoaded', () => {
   openCartDrawer.addEventListener('click', () => {
     prefillCustomerDetails();
     cartOverlay.classList.add('active');
+    setTimeout(revertCheckoutMorph, 600);
   });
 
   closeCartBtn.addEventListener('click', () => {
@@ -1182,7 +1239,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update button to success state
     if (placeOrderBtn) {
-      placeOrderBtn.innerHTML = `<span>âœ“ Order Placed Successfully</span><i data-lucide="check-circle" class="icon-sm"></i>`;
+      placeOrderBtn.innerHTML = `<span>✓ Order Placed Successfully</span><i data-lucide="check-circle" class="icon-sm"></i>`;
       placeOrderBtn.style.background = '#10b981';
       placeOrderBtn.style.boxShadow = '0 0 25px rgba(16, 185, 129, 0.5)';
       placeOrderBtn.disabled = true;
@@ -1657,6 +1714,228 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) {}
   }
 
+  // =================================================================
+  // 17.8 JITTER TYPEWRITER SEARCH & REAL-TIME DROPDOWN ENGINE (Video 1 Match)
+  // =================================================================
+  function initJitterSearch() {
+    const searchWrap = document.getElementById('swiftSearchWrap');
+    const searchPill = document.getElementById('searchInputPill');
+    const searchInput = document.getElementById('storeSearchInput');
+    const typewriterText = document.getElementById('typewriterText');
+    const typewriterCursor = document.getElementById('typewriterCursor');
+    const searchClearBtn = document.getElementById('searchClearBtn');
+    const dropdownMenu = document.getElementById('searchDropdownMenu');
+    const resultsCount = document.getElementById('searchResultsCount');
+    const resultsList = document.getElementById('searchResultsList');
+
+    if (!searchWrap || !searchInput || !typewriterText || !typewriterCursor) return;
+
+    const phrases = [
+      "Search luxury puffer jackets...",
+      "Solar Ember aerogel...",
+      "Stealth Obsidian 850 fill...",
+      "Glacier Pearl alpine edition...",
+      "Crimson Ruby velvet...",
+      "Search by color, size or style..."
+    ];
+
+    let phraseIdx = 0;
+    let charIdx = 0;
+    let isDeleting = false;
+    let typewriterTimer = null;
+    let isPaused = false;
+
+    function tickTypewriter() {
+      if (isPaused) return;
+
+      const currentPhrase = phrases[phraseIdx % phrases.length];
+
+      if (isDeleting) {
+        charIdx--;
+        typewriterText.textContent = currentPhrase.substring(0, charIdx);
+        if (charIdx <= 0) {
+          isDeleting = false;
+          phraseIdx = (phraseIdx + 1) % phrases.length;
+          typewriterTimer = setTimeout(tickTypewriter, 400);
+          return;
+        }
+        typewriterTimer = setTimeout(tickTypewriter, 35);
+      } else {
+        charIdx++;
+        typewriterText.textContent = currentPhrase.substring(0, charIdx);
+        if (charIdx >= currentPhrase.length) {
+          isDeleting = true;
+          typewriterTimer = setTimeout(tickTypewriter, 2000);
+          return;
+        }
+        typewriterTimer = setTimeout(tickTypewriter, 75);
+      }
+    }
+
+    // Start typewriter loop
+    tickTypewriter();
+
+    function pauseTypewriter() {
+      isPaused = true;
+      if (typewriterTimer) clearTimeout(typewriterTimer);
+      typewriterText.style.opacity = '0';
+      typewriterCursor.style.opacity = '0';
+    }
+
+    function resumeTypewriter() {
+      if (searchInput.value.trim() === '') {
+        isPaused = false;
+        typewriterText.style.opacity = '1';
+        typewriterCursor.style.opacity = '1';
+        tickTypewriter();
+      }
+    }
+
+    // Input events
+    searchInput.addEventListener('focus', () => {
+      if (searchPill) searchPill.classList.add('is-active');
+      pauseTypewriter();
+      if (searchInput.value.trim().length > 0) {
+        performSearch(searchInput.value.trim());
+      }
+    });
+
+    searchInput.addEventListener('blur', () => {
+      if (searchPill) searchPill.classList.remove('is-active');
+      if (searchInput.value.trim() === '') {
+        setTimeout(resumeTypewriter, 200);
+      }
+    });
+
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.trim();
+      if (query.length > 0) {
+        pauseTypewriter();
+        if (searchClearBtn) searchClearBtn.style.display = 'flex';
+        performSearch(query);
+      } else {
+        if (searchClearBtn) searchClearBtn.style.display = 'none';
+        closeDropdown();
+      }
+    });
+
+    if (searchClearBtn) {
+      searchClearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        searchInput.value = '';
+        searchClearBtn.style.display = 'none';
+        closeDropdown();
+        searchInput.focus();
+        resumeTypewriter();
+      });
+    }
+
+    function openDropdown() {
+      if (dropdownMenu) dropdownMenu.classList.add('is-open');
+    }
+
+    function closeDropdown() {
+      if (dropdownMenu) dropdownMenu.classList.remove('is-open');
+    }
+
+    function highlightMatch(text, query) {
+      if (!query) return text;
+      const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${escaped})`, 'gi');
+      return text.replace(regex, '<mark style="background:rgba(255,106,43,0.35);color:#fff;border-radius:3px;padding:0 2px;">$1</mark>');
+    }
+
+    function performSearch(query) {
+      const q = query.toLowerCase();
+      const currentProds = (products && products.length > 0) ? products : DEFAULT_PRODUCTS;
+      
+      const matches = currentProds.map((prod, originalIdx) => ({ prod, originalIdx }))
+        .filter(({ prod }) => {
+          const name = (prod.name || '').toLowerCase();
+          const color = (prod.colorName || '').toLowerCase();
+          const tag = (prod.tag || '').toLowerCase();
+          const desc = (prod.description || '').toLowerCase();
+          const tech = (prod.tech || '').toLowerCase();
+          return name.includes(q) || color.includes(q) || tag.includes(q) || desc.includes(q) || tech.includes(q);
+        });
+
+      if (resultsCount) {
+        resultsCount.textContent = `${matches.length} ${matches.length === 1 ? 'jacket' : 'jackets'}`;
+      }
+
+      if (!resultsList) return;
+      resultsList.innerHTML = '';
+
+      if (matches.length === 0) {
+        resultsList.innerHTML = `
+          <div class="jitter-no-results">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="opacity:0.6;margin-bottom:6px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <div>No matching jackets found for "<strong>${query}</strong>"</div>
+            <div style="font-size:0.75rem;margin-top:4px;color:rgba(255,255,255,0.4);">Try searching by color, aerogel, or puffer.</div>
+          </div>
+        `;
+      } else {
+        matches.forEach(({ prod, originalIdx }) => {
+          const card = document.createElement('div');
+          card.className = 'jitter-result-card';
+          card.setAttribute('data-prod-index', originalIdx);
+          card.innerHTML = `
+            <div class="jitter-result-thumb">
+              <img src="${prod.image}" alt="${prod.name}">
+            </div>
+            <div class="jitter-result-info">
+              <div class="jitter-result-name">${highlightMatch(prod.name, query)}</div>
+              <div class="jitter-result-meta">
+                <span class="jitter-result-color">${prod.colorName}</span>
+                <span class="jitter-result-price">${formatPKR(prod.price)}</span>
+              </div>
+            </div>
+            <button type="button" class="jitter-result-action" title="View on stage">
+              <span>View</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+          `;
+
+          card.addEventListener('click', () => {
+            closeDropdown();
+            searchInput.value = '';
+            if (searchClearBtn) searchClearBtn.style.display = 'none';
+            resumeTypewriter();
+            performTwoWayJacketSwap(originalIdx);
+            const heroEl = document.getElementById('hero');
+            if (heroEl) {
+              heroEl.scrollIntoView({ behavior: 'smooth' });
+            }
+          });
+
+          resultsList.appendChild(card);
+        });
+      }
+
+      openDropdown();
+    }
+
+    // Close on outside click or ESC
+    document.addEventListener('click', (e) => {
+      if (!searchWrap.contains(e.target)) {
+        closeDropdown();
+        if (searchInput.value.trim() === '') {
+          resumeTypewriter();
+        }
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeDropdown();
+        searchInput.blur();
+        if (searchInput.value.trim() === '') {
+          resumeTypewriter();
+        }
+      }
+    });
+  }
+
   // 18. INITIALIZE APPLICATION
   checkUrlSyncParam();
   applyBrandSettings();
@@ -1668,6 +1947,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mainJacketImg.src = products[0].image;
   }
   updateAuthModalState();
+  initJitterSearch();
   checkCloudUpdates();
   initLiveCloudStream();
   if (window.lucide) {
